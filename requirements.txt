@@ -1,0 +1,4 @@
+bitarray==3.8.0
+bitstring==4.4.0
+fastbencode==0.3.10
+tibs==0.5.7
