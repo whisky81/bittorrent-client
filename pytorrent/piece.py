@@ -5,7 +5,7 @@ import hashlib
 from .core.utils import Block
 from .core.pwp_response_parse import PeerResponseParser as Parser
 from .core.pwp_response_handler import PeerResponseHandler as Handler
-from .core.constants import BLOCK_SIZE, BLOCKS_PER_CYCLE, MIN_BLOCKS_PER_CYCLE
+from .core.constants import BLOCK_SIZE, BLOCKS_PER_CYCLE, MIN_BLOCKS_PER_CYCLE, MAX_BLOCKS_PER_CYCLE
 from .core.pwp_message_generator import gen_request_msg
 import logging
 
@@ -52,7 +52,11 @@ class Piece:
 
             requests += request_message
 
-        response = await peer.send_message(requests, timeout=5)
+        # Write all request messages at once (non-blocking, no response drain)
+        await peer.write_only(requests)
+
+        # Read exactly len(block_offsets) PIECE responses using length-prefix framing
+        response = await peer.stream_pieces(len(block_offsets))
 
         if not response:
             peer.update_piece_info(self.num, False)
@@ -98,15 +102,38 @@ class Piece:
     def adjust_blocks_per_cycle(self, value: int = 1):
         global BLOCKS_PER_CYCLE
         BLOCKS_PER_CYCLE += value
-
         BLOCKS_PER_CYCLE = max(BLOCKS_PER_CYCLE, MIN_BLOCKS_PER_CYCLE)
-
-        BLOCKS_PER_CYCLE = min(BLOCKS_PER_CYCLE, self.total_blocks)
+        BLOCKS_PER_CYCLE = min(BLOCKS_PER_CYCLE, MAX_BLOCKS_PER_CYCLE)
+        logger.debug(f"Piece #{self.num}: BLOCKS_PER_CYCLE adjusted to {BLOCKS_PER_CYCLE}")
 
     async def download(self, peers_man: asyncio.PriorityQueue) -> "Piece":
         priority, peer = await peers_man.get()
 
-        while not self.is_piece_complete(): 
+        while not self.is_piece_complete():
+            # If peer is choking us, wait for unchoke event or rotate
+            if getattr(peer, 'choking_me', True):
+                # Suspend efficiently until peer unchokes us or we decide to rotate
+                try:
+                    # Wait up to 30s for an unchoke signal
+                    await asyncio.wait_for(peer.unchoke_event.wait(), timeout=30.0)
+                except asyncio.TimeoutError:
+                    # If still choked after 30s, rotate to another peer
+                    await peers_man.put((priority + 5, peer))
+                    priority, peer = await peers_man.get()
+                    continue
+                
+                # If we get here, the event was set (peer unchoked us)
+                # Note: We don't sleep anymore, the wait() is exactly as long as needed
+                if getattr(peer, 'choking_me', True):
+                    # Edge case: event was set but choking_me is still True? 
+                    # (Shouldn't happen with correct handler logic)
+                    continue
+
+            if not getattr(peer, 'active', False):
+                # Handle dead peer: it's already disconnected, just get another one
+                priority, peer = await peers_man.get()
+                continue
+
             task_list = list()
             block_offsets = self.gen_offsets()
 
@@ -115,26 +142,27 @@ class Piece:
             else:
                 offsets = self.gen_offsets()
 
-            blocks = self.fetch_blocks(offsets, peer)  # type: ignore
-            task = asyncio.create_task(blocks)
-            task_list.append(task)
-
             try:
-                results = await asyncio.gather(*task_list)
-                self.adjust_blocks_per_cycle(1)
+                blocks_task = self.fetch_blocks(offsets, peer)  # type: ignore
+                results = await asyncio.wait_for(blocks_task, timeout=15)
+                
+                if results:
+                    self.adjust_blocks_per_cycle(1)
+                    for block in results:
+                        if block.data:
+                            self.blocks.update({block.num: block})
+                else:
+                    # Peer sent nothing or was choked mid-stream
+                    await peers_man.put((priority + 1, peer))
+                    priority, peer = await peers_man.get()
 
-            except (BrokenPipeError, IOError):
+            except (BrokenPipeError, IOError, asyncio.TimeoutError) as e:
+                logger.debug(f"Piece #{self.num}: Error downloading from {peer}: {e}")
                 current_priority, current_peer = priority, peer
+                # Put back with high penalty if it's a connection error
+                await peers_man.put((current_priority + 5, current_peer))
                 priority, peer = await peers_man.get()
-                await peers_man.put((current_priority + 1, current_peer))
                 continue
-
-            results = [result for result in results if result]
-            results = sum(results, [])
-
-            for block in results:
-                if block.data:
-                    self.blocks.update({block.num: block})
 
         for block_num in range(self.total_blocks):
             self.data += self.blocks[block_num].data

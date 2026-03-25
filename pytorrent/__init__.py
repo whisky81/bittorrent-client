@@ -3,6 +3,6 @@ import logging
 logging.basicConfig(
     filename="pytorrent.log",
     filemode="w",
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )

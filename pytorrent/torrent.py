@@ -39,6 +39,8 @@ class Torrent:
         self.trackers = []
         self.peers = []
         self.files = None
+        self.downloader = None
+        self.TARGET_PEER_COUNT = 30
 
         files = metainfo["info"]["files"] if self.has_multiple_files else self.name  # type: ignore
 
@@ -113,6 +115,10 @@ class Torrent:
         await asyncio.gather(*handshakes)
         interested_msgs = [peer.interested() for peer in self.peers]
         await asyncio.gather(*interested_msgs)
+        
+        # Start maintenance loops
+        asyncio.create_task(self._tracker_announce_loop())
+        asyncio.create_task(self.maintain_peers())
 
         self.torrent_info["peers"] = peer_addrs
 
@@ -207,27 +213,82 @@ class Torrent:
         return json.dumps(torrent_info)
 
     async def download(self, file, strategy=0):
-        active_peers = [peer for peer in self.peers if peer.has_handshaked]
-        fd_man = FilesDownloadManager(self.torrent_info, active_peers)
+        active_peers = [peer for peer in self.peers if peer.has_handshaked and peer.active]
+        self.downloader = FilesDownloadManager(self.torrent_info, active_peers)
         directory = self.torrent_info["name"]
         with PieceWriter(directory, file) as piece_writer:
-            async for piece in fd_man.get_file(file):
+            async for piece in self.downloader.get_file(file):
                 piece_writer.write(piece)
+
+    async def maintain_peers(self):
+        """Background task to ensure we have enough active peers and prune bad ones."""
+        while True:
+            # 1. Prune bad peers
+            pruned_count = 0
+            original_count = len(self.peers)
+            
+            # Thresholds for pruning
+            self.peers = [
+                p for p in self.peers if not (
+                    getattr(p, 'failed_attempts', 0) > 5 or 
+                    getattr(p, 'total_disconnects', 0) > 10 or
+                    getattr(p, 'choke_count', 0) > 30
+                )
+            ]
+            pruned_count = original_count - len(self.peers)
+            if pruned_count > 0:
+                logger.warning(f"Torrent: Pruned {pruned_count} bad peers from the pool.")
+
+            # 2. Maintain active peer count
+            active_peers = [p for p in self.peers if p.active and p.has_handshaked]
+            if len(active_peers) < self.TARGET_PEER_COUNT:
+                all_known_addrs = self._get_peers()
+                existing_addrs = {p.address for p in self.peers}
+                new_addrs = [addr for addr in all_known_addrs if addr not in existing_addrs]
+                
+                if new_addrs:
+                    logger.debug(f"Torrent: Found {len(new_addrs)} new peer addresses. Trying to connect to some.")
+                    # Try to connect to a batch of new peers
+                    to_connect = new_addrs[:(self.TARGET_PEER_COUNT - len(active_peers))]
+                    for addr in to_connect:
+                        new_peer = Peer(addr, self.torrent_info)
+                        self.peers.append(new_peer)
+                        asyncio.create_task(self._init_new_peer(new_peer))
+            
+            await asyncio.sleep(60)
+
+    async def _init_new_peer(self, peer):
+        """Initialize a newly discovered peer."""
+        await peer.connect()
+        if peer.active:
+            await peer.handshake()
+            if peer.has_handshaked:
+                await peer.interested()
+                asyncio.create_task(peer.listen_forever())
+                # If a download is active, add the peer to the downloader
+                if self.downloader:
+                    self.downloader.add_peer(peer)
+                    logger.debug(f"Torrent: New peer {peer} added to active downloader.")
 
     async def seed(self):
         logger.info(f"Torrent {self.name}: Entering SEED mode...")
         asyncio.create_task(self._tracker_announce_loop())
-        
+
         listen_tasks = []
         for peer in self.peers:
             if peer.active and peer.has_handshaked:
                 listen_tasks.append(asyncio.create_task(peer.listen_forever()))
-                
+
         if listen_tasks:
-            await asyncio.gather(*listen_tasks)
-        else:
-            while True:
-                await asyncio.sleep(3600)
+            # return_exceptions=True: one broken peer won't crash the entire gather
+            results = await asyncio.gather(*listen_tasks, return_exceptions=True)
+            for r in results:
+                if isinstance(r, Exception):
+                    logger.debug(f"Seed: peer task ended with exception: {r}")
+
+        # Stay alive to accept new inbound connections via TCP server
+        while True:
+            await asyncio.sleep(60)
 
     async def _tracker_announce_loop(self):
         from .core.trackers import HTTPTracker

@@ -12,7 +12,14 @@ class PeerResponseHandler:
         self.peer = peer
 
     async def handle(self):
+        prev_len = None
         while self.artifacts:
+            # Guard: if no key was popped in this iteration, break to avoid infinite loop
+            if len(self.artifacts) == prev_len:
+                logger.warning(f"PeerResponseHandler: artifacts did not shrink ({list(self.artifacts.keys())}), breaking")
+                break
+            prev_len = len(self.artifacts)
+
             if "keep_alive" in self.artifacts:
                 self.handle_keep_alive()
             if "choke" in self.artifacts:
@@ -40,7 +47,9 @@ class PeerResponseHandler:
         if not self.peer:
             return 
         self.peer.choking_me = True
-        # await self.peer.disconnect("Choked client!")
+        self.peer.choke_count = getattr(self.peer, 'choke_count', 0) + 1
+        if hasattr(self.peer, 'unchoke_event'):
+            self.peer.unchoke_event.clear()
         self.artifacts.pop("choke")
 
     def handle_unchoke(self):
@@ -48,6 +57,8 @@ class PeerResponseHandler:
             return 
         self.peer.choking_me = False
         self.peer.am_interested = True
+        if hasattr(self.peer, 'unchoke_event'):
+            self.peer.unchoke_event.set()
         logger.debug(f"PeerResponseHandler: Received Unchoke from {self.peer}")
         self.artifacts.pop("unchoke")
 
@@ -56,10 +67,10 @@ class PeerResponseHandler:
             return
         from .pwp_message_generator import gen_no_payload_msg
         from .constants import UNCHOKE
-        logger.debug(f"PeerResponseHandler: Received Interested from {self.peer}")
-        self.peer.choking_me = False 
+        logger.debug(f"PeerResponseHandler: Received Interested from {self.peer} — sending UNCHOKE")
+        # Note: we are unchoking THEM, doesn't affect their choking_me state for us
         unchoke_msg = gen_no_payload_msg(UNCHOKE)
-        await self.peer.send_message(unchoke_msg)
+        await self.peer.write_only(unchoke_msg)
         self.artifacts.pop("interested")
 
     async def handle_request(self):
@@ -70,20 +81,24 @@ class PeerResponseHandler:
         
         for req in self.artifacts.get("requests", []):
             index, begin, length = req
-            logger.debug(f"PeerResponseHandler: {self.peer} requested piece {index} offset {begin} len {length}")
+            logger.debug(f"PeerResponseHandler: {self.peer} requested piece {index} begin={begin} len={length}")
             
             bitfield = self.peer.torrent_file.get("bitfield")
-            if bitfield and bitfield[index]:
-                directory = self.peer.torrent_file["name"]
-                files = self.peer.files # if Peer has access, wait Torrent info doesn't have FileTree directly in dict.
-                # Actually FileTree is in downloader, or Torrent.files.
+            if bitfield is None or not bitfield[index]:
+                logger.debug(f"PeerResponseHandler: We don't have piece {index}, skipping.")
+                continue
                 
-                block_data = PieceReader.read(self.peer.torrent_file, index, begin, length)
-                if block_data:
-                    piece_msg = gen_piece_msg(index, begin, block_data)
-                    await self.peer.send_message(piece_msg)
-                    if "uploaded" in self.peer.torrent_file:
-                        self.peer.torrent_file["uploaded"] += len(block_data)
+            block_data = PieceReader.read(self.peer.torrent_file, index, begin, length)
+            if block_data:
+                piece_msg = gen_piece_msg(index, begin, block_data)
+                await self.peer.write_only(piece_msg)
+                self.peer.torrent_file["uploaded"] = self.peer.torrent_file.get("uploaded", 0) + len(block_data)
+                logger.debug(
+                    f"PeerResponseHandler: Sent piece {index}+{begin} ({len(block_data)}B) to {self.peer}. "
+                    f"Total uploaded={self.peer.torrent_file['uploaded']}"
+                )
+            else:
+                logger.warning(f"PeerResponseHandler: PieceReader returned empty for piece {index} begin={begin}")
         
         self.artifacts.pop("requests", None)
 
@@ -121,12 +136,16 @@ class PeerResponseHandler:
             pieces = BitArray(message)
             self.peer.has_bitfield = True 
         else:
-            num_pieces = len(self.peer.torrent_info["piece_hashes"]) # type: ignore
-            pieces = BitArray(num_pieces)
+            # HAVE message without prior BITFIELD — use existing pieces or initialize
+            num_pieces = len(self.peer.torrent_file.get("piece_hashes", []))
+            pieces = BitArray(getattr(self.peer, 'pieces', None) or num_pieces)
 
         if "have" in self.artifacts:
             for piece_num in self.artifacts["have"]:
-                pieces[piece_num] = True
+                try:
+                    pieces[piece_num] = True
+                except IndexError:
+                    pass
 
         self.peer.pieces = pieces
         try:
@@ -137,7 +156,7 @@ class PeerResponseHandler:
         except KeyError:
             ...
         finally:
-            logger.debug(f"PeerResponseHandler: Received Bitfield from {self.peer}")
+            logger.debug(f"PeerResponseHandler: Updated bitfield for {self.peer}")
 
     def handle_piece(self):
         blocks = list()
