@@ -1,5 +1,5 @@
 from struct import pack 
-from pytorrent.core.constants import (
+from .constants import (
     PEER_ID_PREFIX, 
     PROTOCOL_NAME,
     CHOKE,

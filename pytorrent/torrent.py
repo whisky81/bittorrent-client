@@ -4,30 +4,16 @@ import asyncio
 import copy
 import json
 
-from pytorrent.peer import Peer
-from pytorrent.core import bencode_wrapper
-from pytorrent.core.file_utils import FileTree
-from pytorrent.tracker_factory import TrackerFactory
+from .core.file_utils import FileTree
+from .core import bencode_wrapper
+from .core.utils import PieceWriter
+import logging
 
+logger = logging.getLogger(__name__)
 
-from pytorrent.downloader import FilesDownloadManager
-from pytorrent.core.utils import PieceWriter
-
-"""
-metainfo
-    announce: str 
-    announce-list: list
-    info:
-        name: str 
-        piece length: int
-        pieces: bytes 
-        length: int             single file
-        files: [{               multiple files 
-            length: int
-            path: list
-        }, ...]
-"""
-
+from .peer import Peer
+from .tracker_factory import TrackerFactory
+from .downloader import FilesDownloadManager
 
 class Torrent:
     def __init__(self, torrent_file) -> None:
@@ -116,8 +102,7 @@ class Torrent:
         for tracker in self.trackers:
             if tracker.active:
                 active_trackers += 1
-        print(f"{active_peers} peers active")
-        print(f"{active_trackers} trackers active")
+        logger.info(f"Torrent Initialization: {active_trackers} trackers active, {active_peers} peers active.")
 
     def show_files(self):
         for file in self.files:  # type: ignore
@@ -128,7 +113,7 @@ class Torrent:
         for tracker in self.trackers:
             peer_list = set(tracker.peers)
             peers_aggregated |= peer_list
-        print(f"\tGot {len(peers_aggregated)} peers for this torrent")
+        logger.debug(f"Torrent: Aggregated {len(peers_aggregated)} unique peers across all trackers.")
         return peers_aggregated
 
     async def _contact_trackers(self):

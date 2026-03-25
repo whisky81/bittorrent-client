@@ -1,5 +1,5 @@
 import fastbencode # type: ignore
-from pytorrent.core.constants import ENCODING
+from .constants import ENCODING
 
 def to_py(data):
     '''

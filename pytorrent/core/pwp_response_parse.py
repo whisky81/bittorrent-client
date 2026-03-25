@@ -1,6 +1,6 @@
 from struct import unpack
 from struct import error as UnpackError
-from pytorrent.core.constants import (
+from .constants import (
     CHOKE,
     UNCHOKE,
     HAVE,
@@ -8,6 +8,9 @@ from pytorrent.core.constants import (
     PIECE,
     HANDSHAKE_LEN,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PeerResponseParser:
@@ -42,18 +45,14 @@ class PeerResponseParser:
                     self.parse_keep_alive()
 
                 if self.message_id not in self.messages:
-                    print(
-                        f"{self.message_id=}, {self.message_len=}, {self.response[:16]}"
-                    )
+                    logger.warning(f"PeerResponseParser: Unhandled message_id={self.message_id}, length={self.message_len}")
                     self.response = bytes()
 
-                print(
-                    f"{self.message_len=}, {self.message_id=}, {self.response[:16]=}"
-                )
+                logger.debug(f"PeerResponseParser: Parsing message_id={self.message_id}, length={self.message_len}")
                 self.messages[self.message_id]()
 
             except Exception as E:
-                print(f"Parser: {E}")
+                logger.error(f"PeerResponseParser: Exception while parsing response - {E}")
                 self.response = bytes()
 
         return self.artifacts

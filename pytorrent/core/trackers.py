@@ -6,8 +6,11 @@ from ipaddress import IPv4Address
 from struct import pack, unpack
 from urllib.parse import urlparse, urlencode, quote_from_bytes
 from http.client import HTTPConnection, HTTPSConnection
-from pytorrent.core.constants import ENCODING, PEER_ID_PREFIX,UDP_PROTOCOL_ID
-from pytorrent.core import bencode_wrapper
+from .constants import ENCODING, PEER_ID_PREFIX,UDP_PROTOCOL_ID
+from . import bencode_wrapper
+import logging
+
+logger = logging.getLogger(__name__)
 
 PEER_ID = PEER_ID_PREFIX + "1qazx2ws3e4r".encode()
 
@@ -168,14 +171,13 @@ class UDPTracker(Tracker):
             self.transport = transport
             connect_req_params = self.parent_obj.gen_udp_connect_req()
             connect_req = UDPTracker.serialize_connect("bytes", connect_req_params)
-            print(f"{self.parent_obj} sending connect request to {self.address}")
+            logger.debug(f"{self.parent_obj} sending connect request to {self.address}")
             self.transport.sendto(connect_req)  # type: ignore
 
         def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
             action = unpack(">I", data[:4])[0]
             if action == 0:
-                print(f"{self.parent_obj} Received connect response from {addr}")
-                print(f"{self.parent_obj} Connect response: {data[:16]}")
+                logger.debug(f"{self.parent_obj} Received connect response from {addr}")
                 self.parent_obj.connect_response = (
                     self.parent_obj.parse_udp_connect_res(data)
                 )
@@ -190,11 +192,10 @@ class UDPTracker(Tracker):
                     "bytes", announce_req_params
                 )
 
-                print(f"{self.parent_obj} Sending announce request to {self.address}")
+                logger.debug(f"{self.parent_obj} Sending announce request to {self.address}")
                 self.transport.sendto(announce_req)  # type: ignore
             elif action == 1:
-                print(f"{self.parent_obj} Received announce response from {addr}")
-                print(f"{self.parent_obj} Announce response: {data[:32]}")
+                logger.debug(f"{self.parent_obj} Received announce response from {addr}")
                 self.parent_obj.announce_response = (
                     self.parent_obj.parse_udp_announce_res(data)
                 )
@@ -211,13 +212,12 @@ class UDPTracker(Tracker):
             )
             await asyncio.sleep(timeout)
         except gaierror as e:
-            print(f"failed to get addr info from {self}")
-            print(e)
+            logger.error(f"Failed to get addr info from {self}: {e}")
             self.active = False 
         except Exception as e:
             self.peers = []
             self.active = False
-            print(e)
+            logger.error(f"Error getting peers from {self}: {e}")
 
         return self.peers
 
@@ -238,9 +238,6 @@ class HTTPTracker(Tracker):
 
         announce_req_raw = self.gen_http_announce_req()
         announce_req = HTTPTracker.serialize_connect("url", announce_req_raw)
-        # print("HTTP ANNOUNCE REQUEST")
-        # print("\t", announce_req)
-        # print("\n"*3)
         def connect_to_tracker(payload: str):
             http_conn_factory = (
                 HTTPSConnection if self.scheme == "https" else HTTPConnection
@@ -255,12 +252,14 @@ class HTTPTracker(Tracker):
                 self.active = True
                 self.announce_response = bencode_wrapper.bdecode(response.read())
                 peer_list = self.announce_response["peers"]  # type: ignore
-                print("\nHERE\n")
-                print(peer_list)
-                print("\nHERE\n")
-                if isinstance(peer_list, str):
-                    for i in range(0, len(peer_list), 6):
-                        ip, port = unpack(">IH", peer_list[i : i + 6].encode(ENCODING))
+                logger.debug(f"HTTPTracker parsed peers mapping: retrieved {type(peer_list)}")
+                if isinstance(peer_list, (str, bytes)):
+                    if isinstance(peer_list, str):
+                        peer_list_bytes = peer_list.encode(ENCODING)
+                    else:
+                        peer_list_bytes = peer_list
+                    for i in range(0, len(peer_list_bytes), 6):
+                        ip, port = unpack(">IH", peer_list_bytes[i : i + 6])
                         ip = IPv4Address(ip).compressed
                         self.peers.append((ip, port))
                 elif isinstance(peer_list, list):
@@ -269,9 +268,7 @@ class HTTPTracker(Tracker):
                 else:
                     raise RuntimeError(f"Unknown peers data: {peer_list}")
             else:
-                print(
-                    f"Error fetching peers from {self}: Error Code: {response.status} - {response.reason}: {response.read()}"
-                )
+                logger.error(f"Error fetching peers from {self}: Error Code: {response.status} - {response.reason}")
                 self.active = False 
                 return []
 
@@ -283,7 +280,5 @@ class HTTPTracker(Tracker):
             return self.peers
 
         except Exception as e:
-            print(
-                f"Error occured while connecting to {self}: {e} [resp:{self.announce_response}]"
-            )
+            logger.error(f"Error occured while connecting to {self}: {e}")
             return []

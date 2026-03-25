@@ -1,7 +1,10 @@
 from struct import unpack
 from bitstring import BitArray
-from pytorrent.core.utils import Block
-from pytorrent.core.constants import HANDSHAKE_LEN, PROTOCOL_NAME
+from .utils import Block
+from .constants import HANDSHAKE_LEN, PROTOCOL_NAME
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PeerResponseHandler:
     def __init__(self, artifacts: dict, peer = None):
@@ -26,7 +29,7 @@ class PeerResponseHandler:
                 return self.handle_piece()
 
     def handle_keep_alive(self):
-        print(f"Keep-Alive from {self.peer}")
+        logger.debug(f"PeerResponseHandler: Received Keep-Alive from {self.peer}")
         self.artifacts.pop("keep_alive")
 
     async def handle_choke(self):
@@ -41,7 +44,7 @@ class PeerResponseHandler:
             return 
         self.peer.choking_me = False
         self.peer.am_interested = True
-        print(f"Unchoke from {self.peer}")
+        logger.debug(f"PeerResponseHandler: Received Unchoke from {self.peer}")
         self.artifacts.pop("unchoke")
 
     async def handle_handshake(self):
@@ -67,7 +70,7 @@ class PeerResponseHandler:
 
         self.peer.has_handshaked = True
         self.peer.handshake_response = handshake_response
-        print(f"Handshake from {self.peer}")
+        logger.debug(f"PeerResponseHandler: Received Handshake from {self.peer}")
         self.artifacts.pop("handshake")
 
     def handle_bitfield(self):
@@ -94,7 +97,7 @@ class PeerResponseHandler:
         except KeyError:
             ...
         finally:
-            print(f"Bitfield from {self.peer}")
+            logger.debug(f"PeerResponseHandler: Received Bitfield from {self.peer}")
 
     def handle_piece(self):
         blocks = list()

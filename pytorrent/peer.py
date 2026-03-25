@@ -1,9 +1,12 @@
 from bitstring import BitArray
 import asyncio
-from pytorrent.core.pwp_message_generator import gen_handshake_msg, gen_no_payload_msg
-from pytorrent.core.pwp_response_parse import PeerResponseParser as Parse
-from pytorrent.core.pwp_response_handler import PeerResponseHandler as Handler 
-from pytorrent.core.constants import EMPTY_RESPONSE_THRESHOLD, INTERESTED
+from .core.pwp_message_generator import gen_handshake_msg, gen_no_payload_msg
+from .core.pwp_response_parse import PeerResponseParser as Parse
+from .core.pwp_response_handler import PeerResponseHandler as Handler 
+from .core.constants import EMPTY_RESPONSE_THRESHOLD, INTERESTED
+import logging
+
+logger = logging.getLogger(__name__)
 class Peer:
     def __init__(self, address, torrent_file, priority=10):
         self.address = address 
@@ -33,7 +36,7 @@ class Peer:
             connection = asyncio.open_connection(host=ip, port=port)
             self.reader, self.writer = await asyncio.wait_for(connection, timeout=3)
             self.active = True 
-            print(f"{self}\t\t\topened connection")
+            logger.debug(f"Peer {self.address}: Connection opened successfully.")
         except asyncio.TimeoutError:
             await self.disconnect("Timeout while connecting")
         except (ConnectionRefusedError, ConnectionResetError, ConnectionAbortedError, OSError):
@@ -47,7 +50,7 @@ class Peer:
             await self.writer.drain()
             self.writer.close()
             await self.writer.wait_closed()
-        print(f"{self}\t\t\t{message}\t\t\tclose connection") 
+        logger.debug(f"Peer {self.address}: Connection closed. Reason: {message}.") 
     
     
     async def send_message(self, message, timeout=3):
@@ -59,9 +62,9 @@ class Peer:
             await self.interested()
             
             if self.active:
-                print(f"Tried sending message to inactive {self}. Successfully re-established connection!") 
+                logger.debug(f"Peer {self.address}: Re-established inactive connection.") 
             else:
-                print(f"Tried sending message to inactive {self}. Failed to re-establish connection!") 
+                logger.error(f"Peer {self.address}: Failed to re-establish connection.") 
                 
             # raise BrokenPipeError("Tried sending message to inactive peer")
         if not self.active:
@@ -94,7 +97,6 @@ class Peer:
         handshake_message = gen_handshake_msg(info_hash)
         response = await self.send_message(handshake_message)
         artifacts = Parse(response).parse()
-        # print(f"handshake response:\t\t\t{artifacts.get('handshake', b'')}")
         await Handler(artifacts, self).handle()
         # await Handler(artifacts, Peer=self).handle()
     

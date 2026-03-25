@@ -1,5 +1,9 @@
+from .constants import BLOCK_SIZE, PEER_ID_PREFIX
+import logging
 from pathlib import Path
-from pytorrent.core.constants import BLOCK_SIZE
+
+logger = logging.getLogger(__name__)
+import secrets
 
 class Block:
 	def __init__(self, piece_num=-1, offset=-1, data=bytes()):
@@ -24,20 +28,17 @@ class PieceWriter:
     
     def write(self, piece):
         piece_index = piece.num - self.file.start_piece
-        # # # # # # # # # # # # # # # # # # # # # # #
-        #											#
-        #											#
-        # piece.piece_size = piece_length?? 		#
-        #											#
-        #											#
-        # # # # # # # # # # # # # # # # # # # # # # #
-        offset = (piece_index * piece.piece_size) - self.file.start_byte
+        offset = (piece_index * piece.piece_length) - self.file.start_byte
         if offset < 0:
             offset = 0
         
         self.target_file.seek(offset)
         self.target_file.write(piece.data)
-        print(f"Wrote {piece} to {self.file.name}")
+        logger.debug(f"PieceWriter: Successfully wrote {piece} data to file '{self.file.name}'")
     
     def __exit__(self, exc_type, exc_val, exc_traceback):
         self.target_file.close()
+
+def gen_secure_peer_id():
+    peer_id = PEER_ID_PREFIX + secrets.token_bytes(12)
+    return peer_id

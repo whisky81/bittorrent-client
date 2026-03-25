@@ -1,9 +1,12 @@
 import asyncio
 from pathlib import Path
 
-from pytorrent.piece import Piece
-from pytorrent.core.constants import BLOCK_SIZE
-from pytorrent.core.file_utils import File, FileTree
+from .piece import Piece
+from .core.constants import BLOCK_SIZE
+from .core.file_utils import File, FileTree
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class FilesDownloadManager:
@@ -51,20 +54,26 @@ class FilesDownloadManager:
 
     async def get_file(self, file: File):
         self.create_pieces_queue(file)
-        task_list = list()
+        pending_tasks = set()
 
         while not self.file_downloaded():
             prio_piece, num = await self.file_pieces.get()
             piece = Piece(num, prio_piece, self.piece_info)
             task = asyncio.create_task(piece.download(self.peer_queue))
-            task_list.append(task)
+            pending_tasks.add(task)
 
-        for task in asyncio.as_completed(task_list):
-            piece = await task
+        while pending_tasks:
+            done, pending_tasks = await asyncio.wait(pending_tasks, return_when=asyncio.FIRST_COMPLETED)
+            for task in done:
+                piece = await task
 
-            if not Piece.is_valid(piece, self.piece_hashmap):
-                self.file_pieces.put_nowait((1, piece.num))
-                continue
+                if not Piece.is_valid(piece, self.piece_hashmap):
+                    prio_piece = 1
+                    num = piece.num
+                    new_piece = Piece(num, prio_piece, self.piece_info)
+                    new_task = asyncio.create_task(new_piece.download(self.peer_queue))
+                    pending_tasks.add(new_task)
+                    continue
 
             if file.start_piece == piece.num:
                 piece.data = piece.data[file.start_byte :]
@@ -73,7 +82,9 @@ class FilesDownloadManager:
                 piece.data = piece.data[: file.end_byte]
 
             file._set_bytes_written(file.get_bytes_written() + len(piece.data))
+            print(f"\rDownloading '{file.name}': {file.get_download_progress()}% completed", end="", flush=True)
             yield piece
 
-        print(f"File {file} downloaded")
+        print(f"\nSuccessfully downloaded file: {file.name}")
+        logger.info(f"File {file.name} downloaded completely.")
 

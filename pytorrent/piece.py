@@ -2,11 +2,14 @@ import asyncio
 import random
 import hashlib
 
-from pytorrent.core.utils import Block
-from pytorrent.core.pwp_response_parse import PeerResponseParser as Parser
-from pytorrent.core.pwp_response_handler import PeerResponseHandler as Handler
-from pytorrent.core.constants import BLOCK_SIZE, BLOCKS_PER_CYCLE, MIN_BLOCKS_PER_CYCLE
-from pytorrent.core.pwp_message_generator import gen_request_msg
+from .core.utils import Block
+from .core.pwp_response_parse import PeerResponseParser as Parser
+from .core.pwp_response_handler import PeerResponseHandler as Handler
+from .core.constants import BLOCK_SIZE, BLOCKS_PER_CYCLE, MIN_BLOCKS_PER_CYCLE
+from .core.pwp_message_generator import gen_request_msg
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Piece:
@@ -38,11 +41,11 @@ class Piece:
 
         for offset in block_offsets:
             block_num = offset // BLOCK_SIZE
-            print(f"Requesting Block #{self.num}-{block_num} from {peer}")
+            logger.debug(f"Piece #{self.num}: Requesting block #{block_num} from {peer}")
             request_message = gen_request_msg(self.num, offset)
             is_last_block = True if block_num == (self.total_blocks - 1) else False
 
-            if self._is_last_piece and is_last_block:
+            if self._is_last_piece and is_last_block and self.last_block_size > 0:
                 request_message = gen_request_msg(
                     self.num, offset, self.last_block_size
                 )
@@ -59,13 +62,12 @@ class Piece:
             artifacts = Parser(response).parse()
             blocks = await Handler(artifacts, peer=peer).handle()
             for block in blocks:  # type: ignore
-                print(f"Got {block} from {peer}")
+                logger.debug(f"Piece #{self.num}: Received {block} from {peer}")
 
             return blocks  # type: ignore
 
         except TypeError as E:
-            print(f"Requesting Blocks for {self} from {peer} Returned None")
-            print(E)
+            logger.warning(f"Piece #{self.num}: Fetching blocks from {peer} failed (Returned None). Error: {E}")
             self.adjust_blocks_per_cycle(-1)
             return None
 
@@ -88,7 +90,7 @@ class Piece:
         piece_hash = hashlib.sha1(piece.data).digest()
 
         if piece_hash != piece_hashmap[piece.num]:
-            print(f"Piece Hash Does Not Match for {piece}")
+            logger.warning(f"Piece #{piece.num}: SHA-1 hash validation failed. Dropping piece.")
             return False
 
         return True
