@@ -37,6 +37,7 @@ class FilesDownloadManager:
         self.piece_info = piece_info
         self.piece_hashmap = torrent_info["piece_hashes"]
         self.file_tree = FileTree(torrent_info)
+        self.completed_pieces: dict[int, bytes] = {}
 
         self.file_pieces = asyncio.PriorityQueue()
         peer_def = 10  
@@ -47,7 +48,8 @@ class FilesDownloadManager:
     def create_pieces_queue(self, file: File) -> None:
         piece_def = 3  
         for piece_num in range(file.start_piece, file.end_piece + 1):
-            self.file_pieces.put_nowait((piece_def, piece_num))
+            if piece_num not in self.completed_pieces:
+                self.file_pieces.put_nowait((piece_def, piece_num))
 
     def file_downloaded(self) -> bool:
         return True if self.file_pieces.empty() else False
@@ -55,6 +57,21 @@ class FilesDownloadManager:
     async def get_file(self, file: File):
         self.create_pieces_queue(file)
         pending_tasks = set()
+
+        # Yield cached pieces immediately
+        for piece_num in range(file.start_piece, file.end_piece + 1):
+            if piece_num in self.completed_pieces:
+                piece = Piece(piece_num, 1, self.piece_info)
+                piece_data = self.completed_pieces[piece_num]
+
+                if file.start_piece == piece_num:
+                    piece_data = piece_data[file.start_byte :]
+                if file.end_piece == piece_num:
+                    piece_data = piece_data[: file.end_byte]
+
+                piece.data = piece_data
+                file._set_bytes_written(file.get_bytes_written() + len(piece.data))
+                yield piece
 
         while not self.file_downloaded():
             prio_piece, num = await self.file_pieces.get()
@@ -74,15 +91,20 @@ class FilesDownloadManager:
                     new_task = asyncio.create_task(new_piece.download(self.peer_queue))
                     pending_tasks.add(new_task)
                     continue
+                
+                # Save to cache before slicing
+                self.completed_pieces[piece.num] = piece.data
+                
+                piece_data = piece.data
+                if file.start_piece == piece.num:
+                    piece_data = piece_data[file.start_byte :]
 
-            if file.start_piece == piece.num:
-                piece.data = piece.data[file.start_byte :]
+                if file.end_piece == piece.num:
+                    piece_data = piece_data[: file.end_byte]
 
-            if file.end_piece == piece.num:
-                piece.data = piece.data[: file.end_byte]
-
-            file._set_bytes_written(file.get_bytes_written() + len(piece.data))
-            yield piece
+                piece.data = piece_data
+                file._set_bytes_written(file.get_bytes_written() + len(piece.data))
+                yield piece
 
         logger.info(f"File {file.name} downloaded completely.")
 

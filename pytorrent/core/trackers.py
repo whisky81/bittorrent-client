@@ -154,6 +154,7 @@ class Tracker:
 class UDPTracker(Tracker):
     def __init__(self, tracker_addr, torrent_info) -> None:
         super().__init__(tracker_addr, torrent_info)
+        self.transport = None
 
     def __repr__(self) -> str:
         return f"UDPTracker({self.hostname}:{self.port})"
@@ -161,54 +162,87 @@ class UDPTracker(Tracker):
     class UDPProtocolFactory(asyncio.DatagramProtocol):
         def __init__(self, parent_obj) -> None:
             super().__init__()
-            self.transport = None
-            self.address = (parent_obj.hostname, parent_obj.port)
             self.parent_obj = parent_obj
 
         def connection_made(self, transport: asyncio.DatagramTransport) -> None:
-            self.transport = transport
-            connect_req_params = self.parent_obj.gen_udp_connect_req()
-            connect_req = UDPTracker.serialize_connect("bytes", connect_req_params)
-            logger.debug(f"{self.parent_obj} sending connect request to {self.address}")
-            self.transport.sendto(connect_req)  # type: ignore
+            self.parent_obj.transport = transport
 
         def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
             action = unpack(">I", data[:4])[0]
             if action == 0:
                 logger.debug(f"{self.parent_obj} Received connect response from {addr}")
-                self.parent_obj.connect_response = (
-                    self.parent_obj.parse_udp_connect_res(data)
-                )
+                self.parent_obj.connect_response = self.parent_obj.parse_udp_connect_res(data)
                 self.parent_obj.active = True
+                if hasattr(self.parent_obj, 'connect_future') and not self.parent_obj.connect_future.done():
+                    self.parent_obj.connect_future.set_result(True)
 
-                connection_id = self.parent_obj.connect_response["connection_id"]
-                transaction_id = self.parent_obj.connect_response["transaction_id"]
-                announce_req_params = self.parent_obj.gen_udp_announce_req(
-                    connection_id, transaction_id
-                )
-                announce_req = self.parent_obj.serialize_announce_req(
-                    "bytes", announce_req_params
-                )
-
-                logger.debug(f"{self.parent_obj} Sending announce request to {self.address}")
-                self.transport.sendto(announce_req)  # type: ignore
             elif action == 1:
                 logger.debug(f"{self.parent_obj} Received announce response from {addr}")
-                self.parent_obj.announce_response = (
-                    self.parent_obj.parse_udp_announce_res(data)
-                )
+                self.parent_obj.announce_response = self.parent_obj.parse_udp_announce_res(data)
+                if hasattr(self.parent_obj, 'announce_future') and not self.parent_obj.announce_future.done():
+                    self.parent_obj.announce_future.set_result(True)
+
             else:
-                raise ValueError("got unsupport action")
+                logger.warning(f"Unsuported action {action} received")
 
     async def get_peers(self, timeout: int = 3):
         self.peers = []
         try:
             loop = asyncio.get_running_loop()
+            self.connect_future = loop.create_future()
+            self.announce_future = loop.create_future()
+
             await loop.create_datagram_endpoint(
                 lambda: self.UDPProtocolFactory(self),
                 remote_addr=(self.hostname, self.port),  # type: ignore
             )
-            await asyncio.sleep(timeout)
+
+            # --- Connect Phase with BEP 15 Timeout ---
+            connected = False
+            for k in range(9):  # BEP 15: k in [0, 8]
+                connect_req_params = self.gen_udp_connect_req()
+                connect_req = UDPTracker.serialize_connect("bytes", connect_req_params)
+                logger.debug(f"{self} sending connect request (attempt {k+1})")
+                
+                if self.transport:
+                    self.transport.sendto(connect_req)
+                
+                try:
+                    await asyncio.wait_for(asyncio.shield(self.connect_future), timeout=15 * (2 ** k))
+                    connected = True
+                    break
+                except asyncio.TimeoutError:
+                    continue
+            
+            if not connected:
+                logger.error(f"{self} Timeout during connect phase after all retries")
+                self.active = False
+                return []
+                
+            # --- Announce Phase with BEP 15 Timeout ---
+            announced = False
+            for k in range(9):
+                connection_id = self.connect_response["connection_id"]
+                transaction_id = self.connect_response["transaction_id"]
+                announce_req_params = self.gen_udp_announce_req(connection_id, transaction_id)
+                announce_req = self.serialize_announce_req("bytes", announce_req_params)
+                
+                logger.debug(f"{self} sending announce request (attempt {k+1})")
+                if self.transport:
+                    self.transport.sendto(announce_req)
+                
+                try:
+                    await asyncio.wait_for(asyncio.shield(self.announce_future), timeout=15 * (2 ** k))
+                    announced = True
+                    break
+                except asyncio.TimeoutError:
+                    continue
+                    
+            if not announced:
+                logger.error(f"{self} Timeout during announce phase after all retries")
+                self.active = False
+                return []
+
         except gaierror as e:
             logger.error(f"Failed to get addr info from {self}: {e}")
             self.active = False 

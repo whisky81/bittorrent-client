@@ -125,7 +125,9 @@ class Torrent:
             tasks.append(
                 asyncio.create_task(tracker.get_peers())  # type: ignore
             )
-        await asyncio.gather(*tasks)
+        # We wait for completing tasks but DO NOT block forever if some backend UDP trackers take an hour to retry (BEP15 timeout)
+        done, pending = await asyncio.wait(tasks, timeout=20)
+        logger.info(f"Initial tracker scrape finished. {len(done)} completed, {len(pending)} continuing in background.")
 
     def get_torrent_file(self, format="json", verbose=False):
 
