@@ -7,6 +7,8 @@ from .constants import (
     BITFIELD,
     PIECE,
     HANDSHAKE_LEN,
+    INTERESTED,
+    REQUEST,
 )
 import logging
 
@@ -19,6 +21,8 @@ class PeerResponseParser:
         self.messages = {
             CHOKE: self.parse_choke,
             UNCHOKE: self.parse_unchoke,
+            INTERESTED: self.parse_interested,
+            REQUEST: self.parse_request,
             HAVE: self.parse_have,
             BITFIELD: self.parse_bitfield,
             PIECE: self.parse_piece,
@@ -68,6 +72,21 @@ class PeerResponseParser:
     def parse_unchoke(self):
         self.response = self.response[5:]
         self.artifacts.update({"unchoke": True})
+
+    def parse_interested(self):
+        self.response = self.response[5:]
+        self.artifacts.update({"interested": True})
+
+    def parse_request(self):
+        if "requests" not in self.artifacts:
+            self.artifacts["requests"] = list()
+        try:
+            index, begin, length = unpack(">III", self.response[5:17])
+            self.artifacts["requests"].append((index, begin, length))
+        except UnpackError:
+            raise TypeError("Parser: Failed to extract request")
+        finally:
+            self.response = self.response[17:]
 
     def parse_have(self):
         message = self.response[:9]

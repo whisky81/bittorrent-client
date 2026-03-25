@@ -93,13 +93,26 @@ class Peer:
     async def handshake(self):
         if not self.active:
             return 
+        from .core.pwp_message_generator import gen_bitfield_msg
+        
         info_hash = self.torrent_file["info_hash"]
         peer_id = self.torrent_file["peer_id"]
         handshake_message = gen_handshake_msg(info_hash, peer_id)
         response = await self.send_message(handshake_message)
         artifacts = Parse(response).parse()
         await Handler(artifacts, self).handle()
-        # await Handler(artifacts, Peer=self).handle()
+        
+        if self.has_handshaked:
+            bitfield = self.torrent_file.get("bitfield", None)
+            if bitfield and bitfield.any(True):
+                bitfield_msg = gen_bitfield_msg(bitfield)
+                await self.send_message(bitfield_msg)
+    
+    async def send_have(self, piece_index):
+        if self.active and self.has_handshaked:
+            from .core.pwp_message_generator import gen_have_msg
+            msg = gen_have_msg(piece_index)
+            await self.send_message(msg)
     
     async def interested(self):
         if not self.active or not self.has_handshaked:
@@ -108,6 +121,26 @@ class Peer:
         response = await self.send_message(message)
         artifacts = Parse(response).parse()
         await Handler(artifacts, self).handle()
+
+    async def listen_forever(self):
+        if not self.active:
+            return 
+            
+        while self.active:
+            try:
+                response = await asyncio.wait_for(self.reader.read(4096), timeout=30)
+                if not response:
+                    await self.disconnect("Remote peer closed connection")
+                    break
+                    
+                artifacts = Parse(response).parse()
+                await Handler(artifacts, self).handle()
+            except asyncio.TimeoutError:
+                pass
+            except Exception as e:
+                logger.debug(f"{self} Error in listening loop: {e}")
+                await self.disconnect(f"Error {e}")
+                break
 
     def update_piece_info(self, piece_num: int, has_piece: bool):
         self.pieces[piece_num] = has_piece

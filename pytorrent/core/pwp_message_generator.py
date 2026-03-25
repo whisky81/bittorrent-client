@@ -33,3 +33,14 @@ def gen_request_msg(index, offset, length=BLOCK_SIZE):
         offset,
         length 
     )
+
+def gen_bitfield_msg(bitfield):
+    payload = bitfield.tobytes()
+    return pack(f">IB{len(payload)}s", 1 + len(payload), 5, payload)
+
+def gen_have_msg(piece_index):
+    return pack(">IBI", 5, 4, piece_index)
+
+def gen_piece_msg(index, begin, block_data):
+    payload_len = len(block_data)
+    return pack(f">IBII{payload_len}s", 9 + payload_len, 7, index, begin, block_data)

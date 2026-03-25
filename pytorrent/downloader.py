@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class FilesDownloadManager:
     def __init__(self, torrent_info: dict, active_peers: list):
+        self.torrent_info = torrent_info
         piece_size = torrent_info["piece_length"]
         file_size = torrent_info["size"]
         self.directory = torrent_info["name"]
@@ -94,6 +95,12 @@ class FilesDownloadManager:
                 
                 # Save to cache before slicing
                 self.completed_pieces[piece.num] = piece.data
+                self.torrent_info["downloaded"] += len(piece.data)
+                
+                if "bitfield" in self.torrent_info:
+                    self.torrent_info["bitfield"][piece.num] = True 
+                if "broadcast_have" in self.torrent_info:
+                    asyncio.create_task(self.torrent_info["broadcast_have"](piece.num))
                 
                 piece_data = piece.data
                 if file.start_piece == piece.num:

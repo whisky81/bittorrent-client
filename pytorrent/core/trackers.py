@@ -60,16 +60,19 @@ class Tracker:
         self, connection_id: int = 0, transaction_id: int = 0
     ) -> dict:
 
+        event_map = {"none": 0, "completed": 1, "started": 2, "stopped": 3}
+        event_val = event_map.get(self.torrent_info.get("event", "none"), 0)
+
         announce_params = {
             "connection_id": connection_id,  # 64 bit integer
             "action": 1,  # 32 bit integer; announce
             "transaction_id": transaction_id,  # 32 bit integer
             "info_hash": self.torrent_info["info_hash"],  # 20 byte string
             "peer_id": self.torrent_info["peer_id"],  # 20 byte string
-            "downloaded": 0,  # 64 bit integer
-            "left": self.torrent_info["size"],  # 64 bit integer
-            "uploaded": 0,  # 64 bit integer
-            "event": 2,  # 32 bit integer; started
+            "downloaded": self.torrent_info["downloaded"],  # 64 bit integer
+            "left": self.torrent_info["size"] - self.torrent_info["downloaded"],  # 64 bit integer
+            "uploaded": self.torrent_info["uploaded"],  # 64 bit integer
+            "event": event_val,  # 32 bit integer; started
             "ip_address": 0,  # 32 bit integer; 0 is default
             "key": self.key,  # 32 bit integer
             "num_want": 200,  # 32 bit integer; -1 is default
@@ -78,18 +81,20 @@ class Tracker:
         return announce_params
 
     def gen_http_announce_req(self):
-
-        return {
+        event_str = self.torrent_info.get("event", "started")
+        req = {
             "info_hash": quote_from_bytes(self.torrent_info["info_hash"]),
             "peer_id": quote_from_bytes(self.torrent_info["peer_id"]),
             "port": 6887,
-            "uploaded": 0,
-            "downloaded": 0,
-            "left": self.torrent_info["size"],
+            "uploaded": self.torrent_info["uploaded"],
+            "downloaded": self.torrent_info["downloaded"],
+            "left": self.torrent_info["size"] - self.torrent_info["downloaded"],
             "compact": 1,
-            "event": "started",
             "num_want": 200,
         }
+        if event_str and event_str != "none":
+            req["event"] = event_str
+        return req
 
     def serialize_announce_req(self, format, announce_params):
         if format == "bytes":

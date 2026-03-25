@@ -42,3 +42,43 @@ class PieceWriter:
 def gen_secure_peer_id():
     peer_id = PEER_ID_PREFIX + secrets.token_bytes(12)
     return peer_id
+
+class PieceReader:
+    @staticmethod
+    def read(torrent_info: dict, index: int, begin: int, length: int) -> bytes:
+        from .file_utils import FileTree
+        from pathlib import Path
+        
+        piece_length = torrent_info["piece_length"]
+        directory = torrent_info["name"]
+        files = FileTree(torrent_info)
+        
+        abs_offset = index * piece_length + begin
+        result = bytearray()
+        bytes_to_read = length
+        
+        current_offset = 0
+        for file in files:
+            if current_offset + file.size <= abs_offset:
+                current_offset += file.size
+                continue 
+                
+            file_offset = abs_offset - current_offset
+            read_len = min(bytes_to_read, file.size - file_offset)
+            
+            filepath = Path(directory) / file.name
+            if filepath.exists():
+                with open(filepath, "rb") as f:
+                    f.seek(file_offset)
+                    result.extend(f.read(read_len))
+            else:
+                return bytes()
+                
+            bytes_to_read -= read_len
+            current_offset += file.size 
+            abs_offset += read_len 
+            
+            if bytes_to_read <= 0:
+                break 
+                
+        return bytes(result)

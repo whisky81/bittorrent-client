@@ -1,5 +1,4 @@
 .venv
-torrent_files
 pytorrent/__pycache__
 pytorrent/core/__pycache__
 out.txt

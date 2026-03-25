@@ -19,12 +19,16 @@ class PeerResponseHandler:
                 await self.handle_choke()
             if "unchoke" in self.artifacts:
                 self.handle_unchoke()
+            if "interested" in self.artifacts:
+                await self.handle_interested()
             if "handshake" in self.artifacts:
                 await self.handle_handshake()
             if "have" in self.artifacts:
                 self.handle_bitfield()
             if "bitfield" in self.artifacts:
                 self.handle_bitfield()
+            if "requests" in self.artifacts:
+                await self.handle_request()
             if "pieces" in self.artifacts:
                 return self.handle_piece()
 
@@ -46,6 +50,42 @@ class PeerResponseHandler:
         self.peer.am_interested = True
         logger.debug(f"PeerResponseHandler: Received Unchoke from {self.peer}")
         self.artifacts.pop("unchoke")
+
+    async def handle_interested(self):
+        if not self.peer:
+            return
+        from .pwp_message_generator import gen_no_payload_msg
+        from .constants import UNCHOKE
+        logger.debug(f"PeerResponseHandler: Received Interested from {self.peer}")
+        self.peer.choking_me = False 
+        unchoke_msg = gen_no_payload_msg(UNCHOKE)
+        await self.peer.send_message(unchoke_msg)
+        self.artifacts.pop("interested")
+
+    async def handle_request(self):
+        if not self.peer:
+            return
+        from .utils import PieceReader
+        from .pwp_message_generator import gen_piece_msg
+        
+        for req in self.artifacts.get("requests", []):
+            index, begin, length = req
+            logger.debug(f"PeerResponseHandler: {self.peer} requested piece {index} offset {begin} len {length}")
+            
+            bitfield = self.peer.torrent_file.get("bitfield")
+            if bitfield and bitfield[index]:
+                directory = self.peer.torrent_file["name"]
+                files = self.peer.files # if Peer has access, wait Torrent info doesn't have FileTree directly in dict.
+                # Actually FileTree is in downloader, or Torrent.files.
+                
+                block_data = PieceReader.read(self.peer.torrent_file, index, begin, length)
+                if block_data:
+                    piece_msg = gen_piece_msg(index, begin, block_data)
+                    await self.peer.send_message(piece_msg)
+                    if "uploaded" in self.peer.torrent_file:
+                        self.peer.torrent_file["uploaded"] += len(block_data)
+        
+        self.artifacts.pop("requests", None)
 
     async def handle_handshake(self):
         if not self.peer:
