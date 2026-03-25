@@ -82,9 +82,7 @@ class FilesDownloadManager:
                 piece.data = piece.data[: file.end_byte]
 
             file._set_bytes_written(file.get_bytes_written() + len(piece.data))
-            print(f"\rDownloading '{file.name}': {file.get_download_progress()}% completed", end="", flush=True)
             yield piece
 
-        print(f"\nSuccessfully downloaded file: {file.name}")
         logger.info(f"File {file.name} downloaded completely.")
 

@@ -1,6 +1,5 @@
 from struct import pack 
 from .constants import (
-    PEER_ID_PREFIX, 
     PROTOCOL_NAME,
     CHOKE,
     UNCHOKE,
@@ -10,16 +9,14 @@ from .constants import (
     BLOCK_SIZE
 )
 
-PEER_ID = PEER_ID_PREFIX + "1qazx2ws3e4r".encode()
-
-def gen_handshake_msg(info_hash):
+def gen_handshake_msg(info_hash, peer_id):
     return pack(
         ">B19sQ20s20s",
         19,
         PROTOCOL_NAME,
         0,
         info_hash,
-        PEER_ID
+        peer_id
     )    
 
 def gen_no_payload_msg(id):

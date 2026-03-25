@@ -93,8 +93,9 @@ class Peer:
     async def handshake(self):
         if not self.active:
             return 
-        info_hash = self.torrent_file['info_hash']
-        handshake_message = gen_handshake_msg(info_hash)
+        info_hash = self.torrent_file["info_hash"]
+        peer_id = self.torrent_file["peer_id"]
+        handshake_message = gen_handshake_msg(info_hash, peer_id)
         response = await self.send_message(handshake_message)
         artifacts = Parse(response).parse()
         await Handler(artifacts, self).handle()

@@ -6,7 +6,7 @@ import json
 
 from .core.file_utils import FileTree
 from .core import bencode_wrapper
-from .core.utils import PieceWriter
+from .core.utils import PieceWriter, gen_secure_peer_id
 import logging
 
 logger = logging.getLogger(__name__)
@@ -76,6 +76,7 @@ class Torrent:
             "piece_hashes": piece_hashes,
             "peers": [],
             "trackers": trackers,
+            "peer_id": gen_secure_peer_id(),
         }
 
         self.files = FileTree(self.torrent_info)

@@ -6,13 +6,11 @@ from ipaddress import IPv4Address
 from struct import pack, unpack
 from urllib.parse import urlparse, urlencode, quote_from_bytes
 from http.client import HTTPConnection, HTTPSConnection
-from .constants import ENCODING, PEER_ID_PREFIX,UDP_PROTOCOL_ID
+from .constants import ENCODING ,UDP_PROTOCOL_ID
 from . import bencode_wrapper
 import logging
 
 logger = logging.getLogger(__name__)
-
-PEER_ID = PEER_ID_PREFIX + "1qazx2ws3e4r".encode()
 
 class Tracker:
     def __init__(self, tracker_addr, torrent_info) -> None:
@@ -67,7 +65,7 @@ class Tracker:
             "action": 1,  # 32 bit integer; announce
             "transaction_id": transaction_id,  # 32 bit integer
             "info_hash": self.torrent_info["info_hash"],  # 20 byte string
-            "peer_id": PEER_ID,  # 20 byte string; Should be the same and only change if the client restarts
+            "peer_id": self.torrent_info["peer_id"],  # 20 byte string
             "downloaded": 0,  # 64 bit integer
             "left": self.torrent_info["size"],  # 64 bit integer
             "uploaded": 0,  # 64 bit integer
@@ -83,7 +81,7 @@ class Tracker:
 
         return {
             "info_hash": quote_from_bytes(self.torrent_info["info_hash"]),
-            "peer_id": quote_from_bytes(PEER_ID),
+            "peer_id": quote_from_bytes(self.torrent_info["peer_id"]),
             "port": 6887,
             "uploaded": 0,
             "downloaded": 0,
