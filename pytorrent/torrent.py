@@ -12,10 +12,12 @@ from .core.utils import PieceWriter, gen_secure_peer_id
 from .peer import Peer
 from .tracker_factory import TrackerFactory
 from .downloader import FilesDownloadManager
+from pathlib import Path
+from .core.constants import PORT
 
 logger = logging.getLogger(__name__)
 class Torrent:
-    def __init__(self, torrent_file) -> None:
+    def __init__(self, torrent_file, save_dir: Path|str|None=None) -> None:
         """
         raise OSError
         """
@@ -86,6 +88,15 @@ class Torrent:
         self.bitfield = BitArray(num_pieces)
         self.torrent_info["bitfield"] = self.bitfield
         self.torrent_info["broadcast_have"] = self.broadcast_have
+        
+        # Initialize save_dir
+        if save_dir:
+            self.save_dir = Path(save_dir)
+        else:
+            self.save_dir = Path.cwd() / "downloads"
+        
+        # Ensure base save_dir exists
+        self.save_dir.mkdir(parents=True, exist_ok=True)
 
     async def broadcast_have(self, piece_index):
         if hasattr(self, 'peers'):
@@ -96,12 +107,22 @@ class Torrent:
             if have_tasks:
                 await asyncio.gather(*have_tasks)
 
-    async def init(self):
+    async def init(self, save_dir: Path|str|None=None):
+        if save_dir:
+            self.save_dir = Path(save_dir)
+            self.save_dir.mkdir(parents=True, exist_ok=True)
+        elif self.save_dir.name != self.torrent_info["name"]:
+            # Default case: ensure we are in a subfolder named after the torrent
+            self.save_dir = self.save_dir / self.torrent_info["name"]
+            self.save_dir.mkdir(parents=True, exist_ok=True)
+            
+        # Store for PieceReader/PieceWriter usage via torrent_info
+        self.torrent_info["save_dir"] = self.save_dir
         try:
-            self.server = await asyncio.start_server(self.handle_incoming_connection, "0.0.0.0", 6887)
-            logger.info("Torrent Initialization: TCP Server listening on 0.0.0.0:6887")
+            self.server = await asyncio.start_server(self.handle_incoming_connection, "0.0.0.0", PORT)
+            logger.info(f"Torrent Initialization: TCP Server listening on 0.0.0.0:{PORT}")
         except Exception as e:
-            logger.error(f"Failed to start TCP Server on 6887: {e}")
+            logger.error(f"Failed to start TCP Server on {PORT}: {e}")
 
         await self._contact_trackers()
         peer_addrs = self._get_peers()
@@ -210,11 +231,10 @@ class Torrent:
 
         return json.dumps(torrent_info)
 
-    async def download(self, file, strategy=0):
+    async def download(self, file):
         active_peers = [peer for peer in self.peers if peer.has_handshaked and peer.active]
         self.downloader = FilesDownloadManager(self.torrent_info, active_peers)
-        directory = self.torrent_info["name"]
-        with PieceWriter(directory, file) as piece_writer:
+        with PieceWriter(self.save_dir, file) as piece_writer:
             async for piece in self.downloader.get_file(file):
                 piece_writer.write(piece)
 

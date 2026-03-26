@@ -1,5 +1,5 @@
 import asyncio
-from pathlib import Path
+# from pathlib import Path
 from collections import defaultdict
 
 from .piece import Piece
@@ -18,8 +18,8 @@ class FilesDownloadManager:
         self.torrent_info = torrent_info
         piece_size = torrent_info["piece_length"]
         file_size = torrent_info["size"]
-        self.directory = torrent_info["name"]
-        Path(self.directory).mkdir(exist_ok=True)
+        # self.directory = torrent_info["name"]
+        # Path(self.directory).mkdir(exist_ok=True)
 
         total_pieces, last_piece = divmod(file_size, piece_size)
         total_blocks, last_block = divmod(piece_size, BLOCK_SIZE)
@@ -46,7 +46,6 @@ class FilesDownloadManager:
 
         self.active_peers = list(active_peers)
         self.file_pieces: asyncio.PriorityQueue = asyncio.PriorityQueue()
-        peer_def = 10
         self.peer_queue: asyncio.PriorityQueue = asyncio.PriorityQueue()
         for peer in active_peers:
             self.add_peer(peer)
