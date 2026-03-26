@@ -1,4 +1,5 @@
 import io
+import time
 import hashlib
 import asyncio
 import copy
@@ -17,12 +18,14 @@ from .core.constants import PORT
 
 logger = logging.getLogger(__name__)
 
+PEER_MAX_FAILS = 5
+PEER_MAX_DISCONNECTS = 10
+PEER_MAX_CHOKES = 30
+
 
 class Torrent:
     def __init__(self, torrent_file, save_dir: Path | str | None = None) -> None:
-        """
-        raise OSError
-        """
+        """raise OSError"""
         if isinstance(torrent_file, io.IOBase):
             bencoded_data = torrent_file.read()
         else:
@@ -43,11 +46,17 @@ class Torrent:
         self.downloader = None
         self.TARGET_PEER_COUNT = 30
 
+        # ── Tracker interval state ─────────────────────────────────────
+        # Persisted across re-announces so the loop never resets to default
+        # on restart. Key = repr(tracker), value = interval in seconds.
+        self._tracker_intervals: dict[str, int] = {}
+        self._next_announce_time: float = 0.0
+
         files = metainfo["info"]["files"] if self.has_multiple_files else self.name
 
         size = 0
         if self.has_multiple_files:
-            size = sum([file["length"] for file in files])
+            size = sum([f["length"] for f in files])
         else:
             size = metainfo["info"]["length"]
 
@@ -90,33 +99,49 @@ class Torrent:
         self.torrent_info["bitfield"] = self.bitfield
         self.torrent_info["broadcast_have"] = self.broadcast_have
 
-        # Initialize save_dir — always use a subfolder named after the torrent
-        # BUG FIX: always append torrent name to avoid collision between torrents
         base_dir = Path(save_dir) if save_dir else Path.cwd() / "downloads"
         self.save_dir = base_dir / self.name
         self.save_dir.mkdir(parents=True, exist_ok=True)
 
+    # ─────────────────────────────────────────────────────────────
+    # Tracker interval helpers
+    # ─────────────────────────────────────────────────────────────
+
+    def _update_tracker_intervals(self):
+        """Cache the announce interval from every active tracker response."""
+        from .core.trackers import HTTPTracker
+        for tracker in self.trackers:
+            if not getattr(tracker, "active", False):
+                continue
+            resp = getattr(tracker, "announce_response", {}) or {}
+            if isinstance(tracker, HTTPTracker):
+                interval = resp.get("interval", resp.get(b"interval", 1800))
+            else:
+                interval = resp.get("interval", 1800)
+            self._tracker_intervals[repr(tracker)] = int(interval)
+
+    def _next_sleep_seconds(self) -> int:
+        """Minimum announce interval across all active trackers (default 1800)."""
+        return min(self._tracker_intervals.values()) if self._tracker_intervals else 1800
+
+    # ─────────────────────────────────────────────────────────────
+    # Init / connection
+    # ─────────────────────────────────────────────────────────────
+
     async def broadcast_have(self, piece_index):
         if hasattr(self, 'peers'):
-            have_tasks = []
-            for peer in self.peers:
-                if getattr(peer, 'has_handshaked', False) and getattr(peer, 'active', False):
-                    have_tasks.append(peer.send_have(piece_index))
-            if have_tasks:
-                await asyncio.gather(*have_tasks)
+            tasks = [
+                p.send_have(piece_index)
+                for p in self.peers
+                if getattr(p, 'has_handshaked', False) and getattr(p, 'active', False)
+            ]
+            if tasks:
+                await asyncio.gather(*tasks)
 
     async def init(self, save_dir: Path | str | None = None):
-        # BUG FIX: always ensure save_dir includes torrent name subfolder
         if save_dir:
             base = Path(save_dir)
-            # Only append torrent name if not already the last component
-            if base.name != self.name:
-                self.save_dir = base / self.name
-            else:
-                self.save_dir = base
-        else:
-            # Already set in __init__ correctly
-            pass
+            self.save_dir = base / self.name if base.name != self.name else base
 
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.torrent_info["save_dir"] = self.save_dir
@@ -125,22 +150,17 @@ class Torrent:
             self.server = await asyncio.start_server(
                 self.handle_incoming_connection, "0.0.0.0", PORT
             )
-            logger.info(
-                f"Torrent Initialization: TCP Server listening on 0.0.0.0:{PORT}"
-            )
+            logger.info(f"Torrent Initialization: TCP Server listening on 0.0.0.0:{PORT}")
         except Exception as e:
             logger.error(f"Failed to start TCP Server on {PORT}: {e}")
 
         await self._contact_trackers()
         peer_addrs = self._get_peers()
 
-        self.peers = [Peer(address, self.torrent_info) for address in peer_addrs]
-        connections = [peer.connect() for peer in self.peers]
-        await asyncio.gather(*connections)
-        handshakes = [peer.handshake() for peer in self.peers]
-        await asyncio.gather(*handshakes)
-        interested_msgs = [peer.interested() for peer in self.peers]
-        await asyncio.gather(*interested_msgs)
+        self.peers = [Peer(addr, self.torrent_info) for addr in peer_addrs]
+        await asyncio.gather(*[p.connect() for p in self.peers])
+        await asyncio.gather(*[p.handshake() for p in self.peers])
+        await asyncio.gather(*[p.interested() for p in self.peers])
 
         if not getattr(self, "_loops_started", False):
             asyncio.create_task(self._tracker_announce_loop())
@@ -149,7 +169,7 @@ class Torrent:
 
         self.torrent_info["peers"] = peer_addrs
 
-        active_peers = sum(1 for peer in self.peers if peer.has_handshaked)
+        active_peers = sum(1 for p in self.peers if p.has_handshaked)
         active_trackers = sum(1 for t in self.trackers if t.active)
         logger.info(
             f"Torrent Initialization: {active_trackers} trackers active, "
@@ -165,9 +185,7 @@ class Torrent:
         peer.active = True
 
         try:
-            handshake_data = await asyncio.wait_for(
-                peer.reader.read(68), timeout=5
-            )
+            handshake_data = await asyncio.wait_for(peer.reader.read(68), timeout=5)
             if not handshake_data:
                 await peer.disconnect("Empty handshake")
                 return
@@ -199,17 +217,14 @@ class Torrent:
             await peer.disconnect()
 
     def show_files(self):
-        for file in self.files:
-            print(file)
+        for f in self.files:
+            print(f)
 
     def _get_peers(self):
         peers_aggregated = set()
         for tracker in self.trackers:
-            peer_list = set(tracker.peers)
-            peers_aggregated |= peer_list
-        logger.debug(
-            f"Torrent: Aggregated {len(peers_aggregated)} unique peers across all trackers."
-        )
+            peers_aggregated |= set(tracker.peers)
+        logger.debug(f"Torrent: Aggregated {len(peers_aggregated)} unique peers.")
         return peers_aggregated
 
     async def _contact_trackers(self, event="started"):
@@ -220,77 +235,99 @@ class Torrent:
                 tracker = TrackerFactory(tracker_addr, self.torrent_info)
                 self.trackers.append(tracker)
 
-        tasks = []
-        for tracker in self.trackers:
-            tasks.append(asyncio.create_task(tracker.get_peers()))
+        tasks = [asyncio.create_task(t.get_peers()) for t in self.trackers]
         done, pending = await asyncio.wait(tasks, timeout=20)
+
+        # Persist intervals immediately after every scrape
+        self._update_tracker_intervals()
+
         logger.info(
-            f"Tracker scrape finished. {len(done)} completed, "
-            f"{len(pending)} continuing in background."
+            f"Tracker scrape: {len(done)} done, {len(pending)} pending. "
+            f"Intervals cached: {self._tracker_intervals}"
         )
 
     def get_torrent_file(self, format="json", verbose=False):
         torrent_info = copy.deepcopy(self.torrent_info)
         torrent_info["info_hash"] = torrent_info["info_hash"].hex()
-
         piece_hashes = torrent_info.pop("piece_hashes")
         peer_list = torrent_info.pop("peers")
         if verbose:
-            torrent_info["piece_hashes"] = [hash.hex() for hash in piece_hashes]
+            torrent_info["piece_hashes"] = [h.hex() for h in piece_hashes]
             torrent_info["peers"] = tuple(peer_list)
-
         return json.dumps(torrent_info)
 
+    # ─────────────────────────────────────────────────────────────
+    # Download
+    # ─────────────────────────────────────────────────────────────
+
     async def download(self, file):
-        active_peers = [
-            peer for peer in self.peers if peer.has_handshaked and peer.active
-        ]
+        """Download a single File object (backwards-compat helper)."""
+        active_peers = [p for p in self.peers if p.has_handshaked and p.active]
         self.downloader = FilesDownloadManager(self.torrent_info, active_peers)
-        with PieceWriter(self.save_dir, file) as piece_writer:
+        with PieceWriter(self.save_dir, file) as pw:
             async for piece in self.downloader.get_file(file):
-                piece_writer.write(piece)
+                pw.write(piece)
+
+    async def download_files(self, file_indices: list[int]):
+        """
+        Download multiple files by index using a single shared peer pool.
+        Completed pieces are cached across files for efficiency.
+        """
+        if not self.files:
+            return
+
+        valid = [i for i in file_indices if 0 <= i < len(self.files)]
+        if not valid:
+            return
+
+        active_peers = [p for p in self.peers if p.has_handshaked and p.active]
+        self.downloader = FilesDownloadManager(self.torrent_info, active_peers)
+
+        for idx in valid:
+            file = self.files[idx]
+            logger.info(f"Torrent: Downloading [{idx}] '{file.name}'")
+            with PieceWriter(self.save_dir, file) as pw:
+                async for piece in self.downloader.get_file(file):
+                    pw.write(piece)
+            logger.info(f"Torrent: Completed [{idx}] '{file.name}'")
+
+    # ─────────────────────────────────────────────────────────────
+    # Background loops
+    # ─────────────────────────────────────────────────────────────
 
     async def maintain_peers(self):
-        """Background task to ensure we have enough active peers and prune bad ones."""
+        """Prune stale/misbehaving peers (TTL + thresholds) and replenish pool."""
         while True:
-            original_count = len(self.peers)
-            self.peers = [
+            to_remove = [
                 p for p in self.peers
-                if not (
-                    getattr(p, 'failed_attempts', 0) > 5
-                    or getattr(p, 'total_disconnects', 0) > 10
-                    or getattr(p, 'choke_count', 0) > 30
+                if (
+                    getattr(p, 'failed_attempts', 0) > PEER_MAX_FAILS
+                    or getattr(p, 'total_disconnects', 0) > PEER_MAX_DISCONNECTS
+                    or getattr(p, 'choke_count', 0) > PEER_MAX_CHOKES
+                    or p.is_timed_out()
                 )
             ]
-            pruned_count = original_count - len(self.peers)
-            if pruned_count > 0:
-                logger.warning(
-                    f"Torrent: Pruned {pruned_count} bad peers from the pool."
-                )
+            for p in to_remove:
+                if p.active:
+                    asyncio.create_task(p.disconnect("TTL/threshold exceeded"))
 
-            active_peers = [p for p in self.peers if p.active and p.has_handshaked]
-            if len(active_peers) < self.TARGET_PEER_COUNT:
-                all_known_addrs = self._get_peers()
-                existing_addrs = {p.address for p in self.peers}
-                new_addrs = [
-                    addr for addr in all_known_addrs if addr not in existing_addrs
-                ]
+            self.peers = [p for p in self.peers if p not in to_remove]
+            if to_remove:
+                logger.warning(f"Torrent: Pruned {len(to_remove)} peers.")
 
-                if new_addrs:
-                    logger.debug(
-                        f"Torrent: Found {len(new_addrs)} new peer addresses. "
-                        f"Trying to connect to some."
-                    )
-                    to_connect = new_addrs[:(self.TARGET_PEER_COUNT - len(active_peers))]
-                    for addr in to_connect:
-                        new_peer = Peer(addr, self.torrent_info)
-                        self.peers.append(new_peer)
-                        asyncio.create_task(self._init_new_peer(new_peer))
+            active = [p for p in self.peers if p.active and p.has_handshaked]
+            if len(active) < self.TARGET_PEER_COUNT:
+                existing = {p.address for p in self.peers}
+                new_addrs = [a for a in self._get_peers() if a not in existing]
+                need = self.TARGET_PEER_COUNT - len(active)
+                for addr in new_addrs[:need]:
+                    np = Peer(addr, self.torrent_info)
+                    self.peers.append(np)
+                    asyncio.create_task(self._init_new_peer(np))
 
             await asyncio.sleep(60)
 
     async def _init_new_peer(self, peer):
-        """Initialize a newly discovered peer."""
         await peer.connect()
         if peer.active:
             await peer.handshake()
@@ -299,9 +336,6 @@ class Torrent:
                 asyncio.create_task(peer.listen_forever())
                 if self.downloader:
                     self.downloader.add_peer(peer)
-                    logger.debug(
-                        f"Torrent: New peer {peer} added to active downloader."
-                    )
 
     async def seed(self):
         logger.info(f"Torrent {self.name}: Entering SEED mode...")
@@ -310,46 +344,36 @@ class Torrent:
             asyncio.create_task(self.maintain_peers())
             self._loops_started = True
 
-        listen_tasks = []
-        for peer in self.peers:
-            if peer.active and peer.has_handshaked:
-                listen_tasks.append(asyncio.create_task(peer.listen_forever()))
-
+        listen_tasks = [
+            asyncio.create_task(p.listen_forever())
+            for p in self.peers
+            if p.active and p.has_handshaked
+        ]
         if listen_tasks:
             results = await asyncio.gather(*listen_tasks, return_exceptions=True)
             for r in results:
                 if isinstance(r, Exception):
-                    logger.debug(f"Seed: peer task ended with exception: {r}")
+                    logger.debug(f"Seed: peer task ended with: {r}")
 
         while True:
             await asyncio.sleep(60)
 
     async def _tracker_announce_loop(self):
-        from .core.trackers import HTTPTracker
+        """
+        Re-announce to trackers using the interval they advertised.
+        The interval is cached in self._tracker_intervals so it survives
+        across calls without reverting to the 1800s default.
+        """
         while True:
-            intervals = []
-            for tracker in self.trackers:
-                if getattr(tracker, "active", False) and getattr(
-                    tracker, "announce_response", None
-                ):
-                    if isinstance(tracker, HTTPTracker):
-                        interval = tracker.announce_response.get(
-                            "interval",
-                            tracker.announce_response.get(b"interval", 1800),
-                        )
-                    else:
-                        interval = tracker.announce_response.get("interval", 1800)
-                    intervals.append(interval)
-
-            sleep_time = min(intervals) if intervals else 1800
+            sleep_time = self._next_sleep_seconds()
+            self._next_announce_time = time.time() + sleep_time
 
             logger.info(
-                f"Torrent {self.name}: Sleeping {sleep_time}s before next "
-                f"tracker announce..."
+                f"Torrent {self.name}: Next announce in {sleep_time}s "
+                f"({time.strftime('%H:%M:%S', time.localtime(self._next_announce_time))})"
             )
             await asyncio.sleep(sleep_time)
 
-            logger.info(
-                f"Torrent {self.name}: Sending periodic tracker announce heartbeat..."
-            )
+            logger.info(f"Torrent {self.name}: Sending tracker heartbeat...")
             await self._contact_trackers(event="none")
+            self._update_tracker_intervals()

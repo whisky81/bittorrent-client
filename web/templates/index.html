@@ -8,712 +8,304 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg0: #1c1c1e;
-            --bg1: #242426;
-            --bg2: #2c2c2e;
-            --bg3: #3a3a3c;
-            --bg-hover: #323234;
-            --bg-selected: #1d3557;
-            --border: #3a3a3c;
-            --border-light: #48484a;
-            --text: #e5e5ea;
-            --text-dim: #8e8e93;
-            --text-muted: #636366;
-            --accent: #0a84ff;
-            --accent-dim: rgba(10, 132, 255, 0.15);
-            --green: #30d158;
-            --green-dim: rgba(48, 209, 88, 0.12);
-            --yellow: #ffd60a;
-            --red: #ff453a;
-            --orange: #ff9f0a;
-            --purple: #bf5af2;
-            --progress-track: #3a3a3c;
-            --progress-dl: #0a84ff;
-            --progress-seed: #30d158;
-            --toolbar-h: 42px;
-            --sidebar-w: 160px;
-            --detail-h: 220px;
-            --statusbar-h: 26px;
+            --bg0: #1c1c1e; --bg1: #242426; --bg2: #2c2c2e; --bg3: #3a3a3c;
+            --bg-hover: #323234; --bg-sel: #1d3557;
+            --border: #3a3a3c; --border-light: #48484a;
+            --text: #e5e5ea; --text-dim: #8e8e93; --text-muted: #636366;
+            --accent: #0a84ff; --accent-dim: rgba(10,132,255,.15);
+            --green: #30d158; --red: #ff453a; --orange: #ff9f0a; --purple: #bf5af2;
+            --dl: #0a84ff; --seed: #30d158; --track: #3a3a3c;
+            --tb: 42px; --sb-w: 160px; --det-h: 220px; --sb: 26px;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background: var(--bg0);
-            color: var(--text);
-            font-family: 'IBM Plex Sans', sans-serif;
-            font-size: 13px;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        /* ─── Toolbar ─────────────────────────────────── */
-        #toolbar {
-            height: var(--toolbar-h);
-            background: var(--bg1);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 8px;
-            gap: 2px;
-            flex-shrink: 0;
-        }
-
-        .tb-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 3px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            border: none;
-            background: transparent;
-            color: var(--text-dim);
-            cursor: pointer;
-            font-size: 11px;
-            font-family: inherit;
-            min-width: 52px;
-            transition: background 0.1s, color 0.1s;
-        }
-
-        .tb-btn:hover { background: var(--bg3); color: var(--text); }
-        .tb-btn:active { background: var(--bg3); }
-        .tb-btn .icon { font-size: 16px; line-height: 1; }
-        .tb-btn.danger:hover { color: var(--red); }
-
-        .tb-sep {
-            width: 1px;
-            height: 24px;
-            background: var(--border);
-            margin: 0 4px;
-        }
-
-        #tb-search {
-            margin-left: auto;
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            padding: 4px 10px 4px 28px;
-            font-family: inherit;
-            font-size: 12px;
-            width: 200px;
-            outline: none;
-            transition: border-color 0.15s;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: 8px center;
-        }
-
-        #tb-search:focus { border-color: var(--accent); }
-        #tb-search::placeholder { color: var(--text-muted); }
-
-        /* ─── Main Layout ──────────────────────────────── */
-        #main {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* ─── Sidebar ──────────────────────────────────── */
-        #sidebar {
-            width: var(--sidebar-w);
-            background: var(--bg1);
-            border-right: 1px solid var(--border);
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .sidebar-section {
-            padding: 10px 0 4px;
-        }
-
-        .sidebar-label {
-            font-size: 10px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            padding: 0 12px 6px;
-        }
-
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 12px;
-            cursor: pointer;
-            border-radius: 0;
-            color: var(--text-dim);
-            font-size: 12.5px;
-            transition: background 0.1s, color 0.1s;
-        }
-
-        .sidebar-item:hover { background: var(--bg-hover); color: var(--text); }
-
-        .sidebar-item.active {
-            background: var(--accent-dim);
-            color: var(--accent);
-            font-weight: 500;
-        }
-
-        .sidebar-item .si-icon { font-size: 13px; width: 16px; text-align: center; }
-
-        .sidebar-count {
-            margin-left: auto;
-            font-size: 10.5px;
-            color: var(--text-muted);
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        /* ─── Content Panel ────────────────────────────── */
-        #content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* ─── Torrent Table ────────────────────────────── */
-        #table-wrap {
-            flex: 1;
-            overflow: auto;
-            min-height: 0;
-        }
-
-        #torrent-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12.5px;
-        }
-
-        #torrent-table thead {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        #torrent-table th {
-            background: var(--bg2);
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 11.5px;
-            padding: 0 8px;
-            height: 28px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            white-space: nowrap;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        #torrent-table th:hover { color: var(--text); background: var(--bg3); }
-        #torrent-table th:last-child { border-right: none; }
-
-        #torrent-table th .sort-arrow {
-            font-size: 9px;
-            margin-left: 3px;
-            opacity: 0.4;
-        }
-
-        #torrent-table th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
-
-        #torrent-table tbody tr {
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            cursor: pointer;
-            transition: background 0.08s;
-        }
-
-        #torrent-table tbody tr:hover { background: var(--bg-hover); }
-        #torrent-table tbody tr.selected { background: var(--bg-selected); }
-
-        #torrent-table td {
-            padding: 0 8px;
-            height: 32px;
-            border-right: 1px solid rgba(255,255,255,0.03);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 0;
-            vertical-align: middle;
-        }
-
-        #torrent-table td:last-child { border-right: none; }
-
-        .col-name { width: 30%; min-width: 200px; }
-        .col-size { width: 70px; text-align: right; }
-        .col-progress { width: 110px; }
-        .col-status { width: 90px; }
-        .col-seeds { width: 55px; text-align: right; }
-        .col-peers { width: 55px; text-align: right; }
-        .col-dl { width: 82px; text-align: right; }
-        .col-ul { width: 82px; text-align: right; }
-        .col-eta { width: 75px; text-align: right; }
-        .col-ratio { width: 55px; text-align: right; }
-
-        /* progress bar in table */
-        .tprogress {
-            position: relative;
-            background: var(--progress-track);
-            border-radius: 2px;
-            height: 14px;
-            overflow: hidden;
-        }
-
-        .tprogress-fill {
-            position: absolute;
-            top: 0; left: 0;
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.5s ease;
-        }
-
-        .tprogress-fill.dl { background: var(--progress-dl); }
-        .tprogress-fill.seed { background: var(--progress-seed); }
-        .tprogress-fill.stall { background: var(--bg3); }
-
-        .tprogress-label {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10.5px;
-            font-family: 'IBM Plex Mono', monospace;
-            color: rgba(255,255,255,0.85);
-            font-weight: 500;
-            mix-blend-mode: difference;
-        }
-
-        /* status badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            font-weight: 500;
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-
-        .badge.downloading { background: rgba(10,132,255,0.15); color: var(--accent); }
-        .badge.seeding { background: rgba(48,209,88,0.12); color: var(--green); }
-        .badge.stalled { background: rgba(255,159,10,0.12); color: var(--orange); }
-        .badge.paused { background: rgba(142,142,147,0.15); color: var(--text-muted); }
-
-        .badge-dot {
-            width: 5px; height: 5px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
-        td.mono {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-
-        td.dl-speed { color: #5bb8ff; }
-        td.ul-speed { color: #a78bfa; }
-
-        /* empty state */
-        #empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-            gap: 12px;
-        }
-
-        #empty-state .empty-icon { font-size: 48px; }
-        #empty-state p { font-size: 14px; }
-
-        /* ─── Detail Panel ─────────────────────────────── */
-        #detail-panel {
-            height: var(--detail-h);
-            background: var(--bg1);
-            border-top: 1px solid var(--border);
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        #detail-tabs {
-            display: flex;
-            background: var(--bg2);
-            border-bottom: 1px solid var(--border);
-            padding: 0 8px;
-            gap: 0;
-            flex-shrink: 0;
-        }
-
-        .detail-tab {
-            padding: 7px 16px;
-            font-size: 12px;
-            color: var(--text-dim);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: color 0.1s;
-        }
-
-        .detail-tab:hover { color: var(--text); }
-        .detail-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-        #detail-content {
-            flex: 1;
-            overflow: auto;
-            padding: 8px 0;
-        }
-
-        /* General tab */
-        .general-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0;
-            padding: 0 12px;
-        }
-
-        .gen-item {
-            padding: 4px 12px 4px 0;
-            display: flex;
-            gap: 6px;
-        }
-
-        .gen-label {
-            color: var(--text-muted);
-            font-size: 11.5px;
-            min-width: 80px;
-        }
-
-        .gen-value {
-            color: var(--text);
-            font-size: 11.5px;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        /* Detail tables */
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-
-        .detail-table th {
-            background: var(--bg2);
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 11px;
-            padding: 4px 10px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-        }
-
-        .detail-table td {
-            padding: 5px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            color: var(--text-dim);
-        }
-
-        .detail-table tr:hover td { background: var(--bg-hover); }
-
-        .tr-working { color: var(--green) !important; }
-        .tr-failed { color: var(--red) !important; }
-
-        /* ─── Status Bar ───────────────────────────────── */
-        #statusbar {
-            height: var(--statusbar-h);
-            background: var(--bg1);
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 12px;
-            gap: 20px;
-            font-size: 11.5px;
-            color: var(--text-muted);
-            flex-shrink: 0;
-        }
-
-        .sb-item { display: flex; align-items: center; gap: 5px; }
-        .sb-val { color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; }
-
-        /* ─── Drag & Drop Zone ─────────────────────────── */
-        #dropzone {
-            position: fixed;
-            inset: 0;
-            background: rgba(10, 132, 255, 0.08);
-            border: 2px dashed var(--accent);
-            border-radius: 8px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            font-size: 20px;
-            color: var(--accent);
-            font-weight: 500;
-            gap: 12px;
-            flex-direction: column;
-            pointer-events: none;
-        }
-
-        #dropzone.active { display: flex; }
-
-        /* ─── Modal ────────────────────────────────────── */
-        #modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.65);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            backdrop-filter: blur(3px);
-        }
-
-        #modal-overlay.open { display: flex; }
-
-        #modal {
-            background: var(--bg2);
-            border: 1px solid var(--border-light);
-            border-radius: 10px;
-            width: 420px;
-            padding: 20px 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        #modal h2 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--text);
-        }
-
-        .modal-drop-area {
-            border: 1.5px dashed var(--border-light);
-            border-radius: 8px;
-            padding: 28px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.15s, background 0.15s;
-            margin-bottom: 16px;
-        }
-
-        .modal-drop-area:hover, .modal-drop-area.dragover {
-            border-color: var(--accent);
-            background: var(--accent-dim);
-        }
-
-        .modal-drop-area .drop-icon { font-size: 32px; margin-bottom: 8px; }
-        .modal-drop-area p { color: var(--text-dim); font-size: 12.5px; }
-        .modal-drop-area span { color: var(--accent); cursor: pointer; }
-
-        #file-input { display: none; }
-
-        .modal-file-selected {
-            background: var(--bg3);
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-size: 12px;
-            color: var(--text-dim);
-            margin-bottom: 16px;
-            display: none;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .modal-file-selected.show { display: flex; }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        .btn {
-            padding: 6px 16px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 12.5px;
-            font-weight: 500;
-            transition: background 0.1s;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-primary:hover { background: #0070e0; }
-        .btn-primary:disabled { background: var(--bg3); color: var(--text-muted); cursor: default; }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-dim);
-        }
-
-        .btn-ghost:hover { background: var(--bg3); }
-
-        /* Context menu */
-        #ctx-menu {
-            position: fixed;
-            background: var(--bg2);
-            border: 1px solid var(--border-light);
-            border-radius: 7px;
-            padding: 4px;
-            z-index: 300;
-            display: none;
-            min-width: 160px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-        }
-
-        .ctx-item {
-            padding: 6px 12px;
-            font-size: 12.5px;
-            color: var(--text-dim);
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .ctx-item:hover { background: var(--bg3); color: var(--text); }
-        .ctx-item.danger { color: var(--red); }
-        .ctx-item.danger:hover { background: rgba(255,69,58,0.1); }
-        .ctx-sep { height: 1px; background: var(--border); margin: 3px 0; }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
-
-        /* resize handle for detail panel */
-        #resize-handle {
-            height: 4px;
-            background: transparent;
-            cursor: ns-resize;
-            flex-shrink: 0;
-            transition: background 0.15s;
-        }
-
-        #resize-handle:hover, #resize-handle.dragging { background: var(--accent); }
-
-        .no-select { user-select: none; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--bg0);color:var(--text);font-family:'IBM Plex Sans',sans-serif;
+             font-size:13px;height:100vh;display:flex;flex-direction:column;
+             overflow:hidden;user-select:none}
+
+        /* ── Toolbar ── */
+        #toolbar{height:var(--tb);background:var(--bg1);border-bottom:1px solid var(--border);
+                 display:flex;align-items:center;padding:0 8px;gap:2px;flex-shrink:0}
+        .tb-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;
+                gap:3px;padding:4px 10px;border-radius:6px;border:none;background:transparent;
+                color:var(--text-dim);cursor:pointer;font-size:11px;font-family:inherit;
+                min-width:52px;transition:background .1s,color .1s}
+        .tb-btn:hover{background:var(--bg3);color:var(--text)}
+        .tb-btn .icon{font-size:16px;line-height:1}
+        .tb-sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+        #tb-search{margin-left:auto;background:var(--bg2);border:1px solid var(--border);
+                   border-radius:6px;color:var(--text);padding:4px 10px 4px 28px;
+                   font-family:inherit;font-size:12px;width:200px;outline:none;
+                   transition:border-color .15s;
+                   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+                   background-repeat:no-repeat;background-position:8px center}
+        #tb-search:focus{border-color:var(--accent)}
+        #tb-search::placeholder{color:var(--text-muted)}
+
+        /* ── Layout ── */
+        #main{display:flex;flex:1;overflow:hidden}
+
+        /* ── Sidebar ── */
+        #sidebar{width:var(--sb-w);background:var(--bg1);border-right:1px solid var(--border);
+                 flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
+        .sb-sect{padding:10px 0 4px}
+        .sb-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;
+                  letter-spacing:.08em;padding:0 12px 6px}
+        .sb-item{display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;
+                 color:var(--text-dim);font-size:12.5px;transition:background .1s,color .1s}
+        .sb-item:hover{background:var(--bg-hover);color:var(--text)}
+        .sb-item.active{background:var(--accent-dim);color:var(--accent);font-weight:500}
+        .sb-icon{font-size:13px;width:16px;text-align:center}
+        .sb-cnt{margin-left:auto;font-size:10.5px;color:var(--text-muted);
+                font-family:'IBM Plex Mono',monospace}
+
+        /* ── Content ── */
+        #content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+        /* ── Table ── */
+        #table-wrap{flex:1;overflow:auto;min-height:0}
+        #tt{width:100%;border-collapse:collapse;font-size:12.5px}
+        #tt thead{position:sticky;top:0;z-index:10}
+        #tt th{background:var(--bg2);color:var(--text-muted);font-weight:500;font-size:11.5px;
+               padding:0 8px;height:28px;text-align:left;border-bottom:1px solid var(--border);
+               border-right:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+        #tt th:hover{color:var(--text);background:var(--bg3)}
+        #tt th:last-child{border-right:none}
+        #tt tbody tr{border-bottom:1px solid rgba(255,255,255,.03);cursor:pointer;
+                     transition:background .08s}
+        #tt tbody tr:hover{background:var(--bg-hover)}
+        #tt tbody tr.sel{background:var(--bg-sel)}
+        #tt td{padding:0 8px;height:32px;border-right:1px solid rgba(255,255,255,.03);
+               white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+               max-width:0;vertical-align:middle}
+        #tt td:last-child{border-right:none}
+        .cn{width:30%;min-width:200px} .csz{width:70px;text-align:right}
+        .cp{width:110px} .cst{width:90px} .csd{width:55px;text-align:right}
+        .cpe{width:55px;text-align:right} .cdl{width:82px;text-align:right}
+        .cul{width:82px;text-align:right} .ceta{width:75px;text-align:right}
+        .crt{width:55px;text-align:right}
+
+        .bar{position:relative;background:var(--track);border-radius:2px;height:14px;overflow:hidden}
+        .bar-fill{position:absolute;top:0;left:0;height:100%;border-radius:2px;transition:width .5s ease}
+        .bar-fill.dl{background:var(--dl)} .bar-fill.seed{background:var(--seed)}
+        .bar-fill.stall{background:var(--bg3)}
+        .bar-lbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+                 font-size:10.5px;font-family:'IBM Plex Mono',monospace;
+                 color:rgba(255,255,255,.85);font-weight:500;mix-blend-mode:difference}
+        .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;
+               font-weight:500;padding:2px 6px;border-radius:3px}
+        .badge.downloading{background:rgba(10,132,255,.15);color:var(--dl)}
+        .badge.seeding{background:rgba(48,209,88,.12);color:var(--seed)}
+        .badge.stalled{background:rgba(255,159,10,.12);color:var(--orange)}
+        .badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+        td.mono{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim)}
+
+        #empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+               padding:60px 20px;color:var(--text-muted);gap:12px}
+        #empty .ei{font-size:48px}
+
+        /* ── Detail Panel ── */
+        #det{height:var(--det-h);background:var(--bg1);border-top:1px solid var(--border);
+             flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
+        #det-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);
+                  padding:0 8px;flex-shrink:0}
+        .dtab{padding:7px 16px;font-size:12px;color:var(--text-dim);cursor:pointer;
+              border-bottom:2px solid transparent;transition:color .1s}
+        .dtab:hover{color:var(--text)} .dtab.active{color:var(--accent);border-bottom-color:var(--accent)}
+        #det-body{flex:1;overflow:auto;padding:8px 0}
+        .gen-grid{display:grid;grid-template-columns:repeat(3,1fr);padding:0 12px}
+        .gen-item{padding:4px 12px 4px 0;display:flex;gap:6px}
+        .gen-lbl{color:var(--text-muted);font-size:11.5px;min-width:80px}
+        .gen-val{color:var(--text);font-size:11.5px;font-family:'IBM Plex Mono',monospace}
+        .dtable{width:100%;border-collapse:collapse;font-size:12px}
+        .dtable th{background:var(--bg2);color:var(--text-muted);font-weight:500;font-size:11px;
+                   padding:4px 10px;text-align:left;border-bottom:1px solid var(--border);
+                   position:sticky;top:0}
+        .dtable td{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text-dim)}
+        .dtable tr:hover td{background:var(--bg-hover)}
+        .ok{color:var(--green)!important} .fail{color:var(--red)!important}
+
+        /* ── Status Bar ── */
+        #statusbar{height:var(--sb);background:var(--bg1);border-top:1px solid var(--border);
+                   display:flex;align-items:center;padding:0 12px;gap:20px;
+                   font-size:11.5px;color:var(--text-muted);flex-shrink:0}
+        .sb-i{display:flex;align-items:center;gap:5px}
+        .sb-v{color:var(--text-dim);font-family:'IBM Plex Mono',monospace}
+
+        /* ── Resize ── */
+        #rh{height:4px;background:transparent;cursor:ns-resize;flex-shrink:0;transition:background .15s}
+        #rh:hover,#rh.drag{background:var(--accent)}
+
+        /* ── Drag overlay ── */
+        #dz{position:fixed;inset:0;background:rgba(10,132,255,.08);border:2px dashed var(--accent);
+            border-radius:8px;display:none;align-items:center;justify-content:center;
+            z-index:200;font-size:20px;color:var(--accent);font-weight:500;gap:12px;
+            flex-direction:column;pointer-events:none}
+        #dz.on{display:flex}
+
+        /* ── Context Menu ── */
+        #ctx{position:fixed;background:var(--bg2);border:1px solid var(--border-light);
+             border-radius:7px;padding:4px;z-index:300;display:none;
+             min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+        .ctx-i{padding:6px 12px;font-size:12.5px;color:var(--text-dim);
+               border-radius:4px;cursor:pointer}
+        .ctx-i:hover{background:var(--bg3);color:var(--text)}
+        .ctx-i.d{color:var(--red)} .ctx-i.d:hover{background:rgba(255,69,58,.1)}
+        .ctx-sep{height:1px;background:var(--border);margin:3px 0}
+
+        /* ── Modal base ── */
+        .mo{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;
+            align-items:center;justify-content:center;z-index:100;
+            backdrop-filter:blur(3px)}
+        .mo.open{display:flex}
+        .mc{background:var(--bg2);border:1px solid var(--border-light);border-radius:10px;
+            width:480px;padding:20px 24px;box-shadow:0 20px 50px rgba(0,0,0,.5);
+            display:flex;flex-direction:column;gap:16px}
+        .mc h2{font-size:15px;font-weight:600;color:var(--text)}
+        .mc-sub{font-size:12px;color:var(--text-muted)}
+
+        /* Step 1: drop area */
+        .drop-area{border:1.5px dashed var(--border-light);border-radius:8px;padding:28px;
+                   text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+        .drop-area:hover,.drop-area.dv{border-color:var(--accent);background:var(--accent-dim)}
+        .drop-area .di{font-size:32px;margin-bottom:8px}
+        .drop-area p{color:var(--text-dim);font-size:12.5px}
+        .drop-area span{color:var(--accent)}
+        #fi{display:none}
+        .sel-info{background:var(--bg3);border-radius:6px;padding:8px 12px;
+                  font-size:12px;color:var(--text-dim);display:none;align-items:center;gap:8px}
+        .sel-info.show{display:flex}
+
+        /* Step 2: file list */
+        #file-list{max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+        .fl-item{display:flex;align-items:center;gap:10px;padding:7px 10px;
+                 border-radius:6px;cursor:pointer;transition:background .1s}
+        .fl-item:hover{background:var(--bg3)}
+        .fl-item input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;
+                                       cursor:pointer;flex-shrink:0}
+        .fl-name{flex:1;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .fl-size{font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;
+                 flex-shrink:0}
+        .fl-sel-all{display:flex;align-items:center;justify-content:space-between;
+                    padding:0 0 8px 0;border-bottom:1px solid var(--border)}
+        .fl-sel-all label{font-size:12px;color:var(--text-dim);cursor:pointer;
+                          display:flex;align-items:center;gap:6px}
+
+        .ma{display:flex;justify-content:flex-end;gap:8px}
+        .btn{padding:6px 16px;border-radius:6px;border:none;cursor:pointer;
+             font-family:inherit;font-size:12.5px;font-weight:500;transition:background .1s}
+        .btn-p{background:var(--accent);color:white}
+        .btn-p:hover{background:#0070e0}
+        .btn-p:disabled{background:var(--bg3);color:var(--text-muted);cursor:default}
+        .btn-g{background:transparent;color:var(--text-dim)}
+        .btn-g:hover{background:var(--bg3)}
+
+        /* ── Toast notifications ── */
+        #toast-wrap{position:fixed;bottom:36px;right:16px;z-index:500;
+                    display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+        .toast{background:var(--bg2);border:1px solid var(--border-light);border-radius:10px;
+               padding:12px 16px;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.5);
+               animation:slideIn .25s ease;display:flex;flex-direction:column;gap:6px}
+        .toast.leaving{animation:slideOut .25s ease forwards}
+        @keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(120%);opacity:0}}
+        .toast-header{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+        .toast-icon{font-size:18px}
+        .toast-body{font-size:12px;color:var(--text-dim);display:flex;flex-direction:column;gap:4px}
+        .toast-path{font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+                    color:var(--accent);word-break:break-all}
+        .toast-files{max-height:60px;overflow-y:auto}
+        .toast-close{margin-left:auto;background:none;border:none;color:var(--text-muted);
+                     cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 8px}
+        .toast-close:hover{color:var(--text)}
+        .toast-progress{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:2px}
+        .toast-progress-fill{height:100%;background:var(--green);
+                              animation:toastTimer 5s linear forwards}
+        @keyframes toastTimer{from{width:100%}to{width:0%}}
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar{width:6px;height:6px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--border-light)}
+        .no-sel{user-select:none}
+
+        /* File checkbox in file-list */
+        #file-list input[type=checkbox]{pointer-events:none}
     </style>
 </head>
 <body>
 
-<!-- Drag & Drop Overlay -->
-<div id="dropzone">
-    <div>📂</div>
-    <div>Drop .torrent file to add</div>
-</div>
-
-<!-- Context Menu -->
-<div id="ctx-menu">
-    <div class="ctx-item" onclick="ctxAction('copy_hash')">📋 Copy Info Hash</div>
+<div id="dz"><div>📂</div><div>Drop .torrent file to add</div></div>
+<div id="ctx">
+    <div class="ctx-i" onclick="ctxCopy()">📋 Copy Info Hash</div>
     <div class="ctx-sep"></div>
-    <div class="ctx-item danger" onclick="ctxAction('delete')">🗑 Remove Torrent</div>
+    <div class="ctx-i d" onclick="ctxDelete()">🗑 Remove</div>
 </div>
+<div id="toast-wrap"></div>
 
 <!-- Toolbar -->
 <div id="toolbar">
-    <button class="tb-btn" onclick="openModal()" title="Add Torrent">
-        <span class="icon">➕</span>
-        <span>Add</span>
-    </button>
+    <button class="tb-btn" onclick="openStep1()"><span class="icon">➕</span><span>Add</span></button>
     <div class="tb-sep"></div>
-    <button class="tb-btn" id="btn-delete-selected" onclick="deleteSelected()" title="Remove Selected">
-        <span class="icon">🗑</span>
-        <span>Remove</span>
-    </button>
+    <button class="tb-btn" onclick="deleteSelected()"><span class="icon">🗑</span><span>Remove</span></button>
     <div class="tb-sep"></div>
-    <button class="tb-btn" onclick="fetchTorrents()" title="Refresh">
-        <span class="icon">🔄</span>
-        <span>Refresh</span>
-    </button>
-    <input type="text" id="tb-search" placeholder="Filter torrents..." oninput="filterTable(this.value)">
+    <button class="tb-btn" onclick="fetchTorrents()"><span class="icon">🔄</span><span>Refresh</span></button>
+    <input type="text" id="tb-search" placeholder="Filter torrents…" oninput="filterTable(this.value)">
 </div>
 
-<!-- Main area -->
+<!-- Main -->
 <div id="main">
-    <!-- Sidebar -->
     <div id="sidebar">
-        <div class="sidebar-section">
-            <div class="sidebar-label">Filter</div>
-            <div class="sidebar-item active" data-filter="all" onclick="setFilter('all', this)">
-                <span class="si-icon">📋</span> All
-                <span class="sidebar-count" id="cnt-all">0</span>
+        <div class="sb-sect">
+            <div class="sb-label">Filter</div>
+            <div class="sb-item active" onclick="setFilter('all',this)">
+                <span class="sb-icon">📋</span> All <span class="sb-cnt" id="cnt-all">0</span>
             </div>
-            <div class="sidebar-item" data-filter="Downloading" onclick="setFilter('Downloading', this)">
-                <span class="si-icon">⬇</span> Downloading
-                <span class="sidebar-count" id="cnt-dl">0</span>
+            <div class="sb-item" onclick="setFilter('Downloading',this)">
+                <span class="sb-icon">⬇</span> Downloading <span class="sb-cnt" id="cnt-dl">0</span>
             </div>
-            <div class="sidebar-item" data-filter="Seeding" onclick="setFilter('Seeding', this)">
-                <span class="si-icon">⬆</span> Seeding
-                <span class="sidebar-count" id="cnt-seed">0</span>
+            <div class="sb-item" onclick="setFilter('Seeding',this)">
+                <span class="sb-icon">⬆</span> Seeding <span class="sb-cnt" id="cnt-seed">0</span>
             </div>
-            <div class="sidebar-item" data-filter="Stalled" onclick="setFilter('Stalled', this)">
-                <span class="si-icon">⏸</span> Stalled
-                <span class="sidebar-count" id="cnt-stall">0</span>
+            <div class="sb-item" onclick="setFilter('Stalled',this)">
+                <span class="sb-icon">⏸</span> Stalled <span class="sb-cnt" id="cnt-stall">0</span>
             </div>
         </div>
     </div>
 
-    <!-- Content -->
     <div id="content">
-        <!-- Table -->
         <div id="table-wrap">
-            <table id="torrent-table">
-                <thead>
-                    <tr>
-                        <th class="col-name" onclick="sortBy('name')">Name <span class="sort-arrow">▲</span></th>
-                        <th class="col-size" onclick="sortBy('size_raw')">Size <span class="sort-arrow">▲</span></th>
-                        <th class="col-progress" onclick="sortBy('progress')">Done <span class="sort-arrow">▲</span></th>
-                        <th class="col-status" onclick="sortBy('status')">Status <span class="sort-arrow">▲</span></th>
-                        <th class="col-seeds">Seeds</th>
-                        <th class="col-peers" onclick="sortBy('peers_count')">Peers <span class="sort-arrow">▲</span></th>
-                        <th class="col-dl" onclick="sortBy('dl_speed_raw')">↓ Speed <span class="sort-arrow">▲</span></th>
-                        <th class="col-ul" onclick="sortBy('ul_speed_raw')">↑ Speed <span class="sort-arrow">▲</span></th>
-                        <th class="col-eta">ETA</th>
-                        <th class="col-ratio" onclick="sortBy('ratio')">Ratio <span class="sort-arrow">▲</span></th>
-                    </tr>
-                </thead>
+            <table id="tt">
+                <thead><tr>
+                    <th class="cn" onclick="sortBy('name')">Name</th>
+                    <th class="csz" onclick="sortBy('size_raw')">Size</th>
+                    <th class="cp" onclick="sortBy('progress')">Done</th>
+                    <th class="cst" onclick="sortBy('status')">Status</th>
+                    <th class="csd">Seeds</th>
+                    <th class="cpe" onclick="sortBy('peers_count')">Peers</th>
+                    <th class="cdl" onclick="sortBy('dl_speed_raw')">↓ Speed</th>
+                    <th class="cul" onclick="sortBy('ul_speed_raw')">↑ Speed</th>
+                    <th class="ceta">ETA</th>
+                    <th class="crt" onclick="sortBy('ratio')">Ratio</th>
+                </tr></thead>
                 <tbody id="tbody">
                     <tr><td colspan="10">
-                        <div id="empty-state">
-                            <div class="empty-icon">🛰️</div>
-                            <p>No active torrents. Click Add or drag a .torrent file.</p>
-                        </div>
+                        <div id="empty"><div class="ei">🛰️</div>
+                        <p>No active torrents. Click Add or drag a .torrent file.</p></div>
                     </td></tr>
                 </tbody>
             </table>
         </div>
-
-        <!-- Resize handle -->
-        <div id="resize-handle" onmousedown="startResize(event)"></div>
-
-        <!-- Detail Panel -->
-        <div id="detail-panel">
-            <div id="detail-tabs">
-                <div class="detail-tab active" onclick="switchDetailTab('general')">General</div>
-                <div class="detail-tab" onclick="switchDetailTab('trackers')">Trackers</div>
-                <div class="detail-tab" onclick="switchDetailTab('peers')">Peers</div>
-                <div class="detail-tab" onclick="switchDetailTab('files')">Files</div>
+        <div id="rh" onmousedown="startResize(event)"></div>
+        <div id="det">
+            <div id="det-tabs">
+                <div class="dtab active" onclick="switchTab('general')">General</div>
+                <div class="dtab" onclick="switchTab('trackers')">Trackers</div>
+                <div class="dtab" onclick="switchTab('peers')">Peers</div>
+                <div class="dtab" onclick="switchTab('files')">Files</div>
             </div>
-            <div id="detail-content">
-                <div id="no-selection" style="padding:20px; color:var(--text-muted); font-size:12px; text-align:center;">
+            <div id="det-body">
+                <div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">
                     Select a torrent to see details
                 </div>
             </div>
@@ -721,71 +313,92 @@
     </div>
 </div>
 
-<!-- Status Bar -->
+<!-- Status bar -->
 <div id="statusbar">
-    <span class="sb-item">↓ <span class="sb-val" id="sb-dl">0 B/s</span></span>
-    <span class="sb-item">↑ <span class="sb-val" id="sb-ul">0 B/s</span></span>
-    <span class="sb-item">Torrents: <span class="sb-val" id="sb-count">0</span></span>
-    <span class="sb-item">Connected Peers: <span class="sb-val" id="sb-peers">0</span></span>
-    <span style="margin-left:auto; font-size:11px;">PyTorrent v1.0</span>
+    <span class="sb-i">↓ <span class="sb-v" id="sb-dl">0 B/s</span></span>
+    <span class="sb-i">↑ <span class="sb-v" id="sb-ul">0 B/s</span></span>
+    <span class="sb-i">Torrents: <span class="sb-v" id="sb-cnt">0</span></span>
+    <span class="sb-i">Peers: <span class="sb-v" id="sb-peers">0</span></span>
+    <span style="margin-left:auto;font-size:11px">PyTorrent v1.0</span>
 </div>
 
-<!-- Add Torrent Modal -->
-<div id="modal-overlay" onclick="e => { if(e.target===this) closeModal(); }">
-    <div id="modal">
+<!-- ── Modal Step 1: Choose file ── -->
+<div id="mo1" class="mo">
+    <div class="mc">
         <h2>Add Torrent</h2>
-        <div class="modal-drop-area" id="modal-drop"
-            ondragover="e => { e.preventDefault(); this.classList.add('dragover'); }"
-            ondragleave="this.classList.remove('dragover')"
-            ondrop="handleModalDrop(event)"
-            onclick="document.getElementById('file-input').click()">
-            <div class="drop-icon">📂</div>
-            <p>Drop .torrent file here or <span>browse</span></p>
+        <div class="drop-area" id="drop1"
+             ondragover="event.preventDefault();this.classList.add('dv')"
+             ondragleave="this.classList.remove('dv')"
+             ondrop="handleDrop1(event)"
+             onclick="document.getElementById('fi').click()">
+            <div class="di">📂</div>
+            <p>Drop <b>.torrent</b> file here or <span>browse</span></p>
         </div>
-        <input type="file" id="file-input" accept=".torrent" onchange="handleFileSelect(this)">
-        <div class="modal-file-selected" id="file-selected-info">
-            <span>📄</span>
-            <span id="file-selected-name"></span>
+        <input type="file" id="fi" accept=".torrent" onchange="handleFile1(this)">
+        <div class="sel-info" id="sel-info">
+            <span>📄</span><span id="sel-name"></span>
         </div>
-        <div class="modal-actions">
-            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" id="btn-add-confirm" onclick="submitTorrent()" disabled>
-                Add Torrent
-            </button>
+        <div class="ma">
+            <button class="btn btn-g" onclick="closeStep1()">Cancel</button>
+            <button class="btn btn-p" id="btn-next" onclick="uploadAndNext()" disabled>Next →</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal Step 2: Select files ── -->
+<div id="mo2" class="mo">
+    <div class="mc">
+        <h2>Select Files to Download</h2>
+        <div class="mc-sub" id="mo2-name"></div>
+        <div class="fl-sel-all">
+            <label>
+                <input type="checkbox" id="chk-all" onchange="toggleAll(this.checked)">
+                Select All
+            </label>
+            <span id="sel-count-lbl" style="font-size:11px;color:var(--text-muted)"></span>
+        </div>
+        <div id="file-list"></div>
+        <div class="ma">
+            <button class="btn btn-g" onclick="backToStep1()">← Back</button>
+            <button class="btn btn-p" id="btn-start" onclick="startDownload()">Start Download</button>
         </div>
     </div>
 </div>
 
 <script>
-// ─── State ──────────────────────────────────────────────────────
-let torrents = [];
-let selectedHash = null;
-let activeFilter = 'all';
-let searchQuery = '';
-let sortKey = 'name';
-let sortAsc = true;
-let activeDetailTab = 'general';
-let ctxTargetHash = null;
-let selectedFile = null;
+// ── State ────────────────────────────────────────────────────────────────────
+let torrents = [], selHash = null, activeFilter = 'all', searchQuery = '';
+let sortKey = 'name', sortAsc = true, detTab = 'general';
+let ctxHash = null, selFile = null;
+let pendingHash = null, pendingFiles = [];
 
-// ─── Fetch & Render ──────────────────────────────────────────────
+// ── Fetch ────────────────────────────────────────────────────────────────────
 async function fetchTorrents() {
     try {
-        const res = await fetch('/api/torrents');
-        if (!res.ok) return;
-        torrents = await res.json();
+        const r = await fetch('/api/torrents');
+        if (!r.ok) return;
+        torrents = await r.json();
         renderAll();
     } catch {}
 }
 
-function getFiltered() {
+async function fetchNotifications() {
+    try {
+        const r = await fetch('/api/notifications');
+        if (!r.ok) return;
+        const notifs = await r.json();
+        notifs.forEach(showToast);
+    } catch {}
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function filtered() {
     return torrents
         .filter(t => activeFilter === 'all' || t.status === activeFilter)
         .filter(t => !searchQuery || t.name.toLowerCase().includes(searchQuery.toLowerCase()))
         .sort((a, b) => {
             let va = a[sortKey], vb = b[sortKey];
-            if (typeof va === 'string') va = va.toLowerCase();
-            if (typeof vb === 'string') vb = vb.toLowerCase();
+            if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
             if (va < vb) return sortAsc ? -1 : 1;
             if (va > vb) return sortAsc ? 1 : -1;
             return 0;
@@ -793,381 +406,340 @@ function getFiltered() {
 }
 
 function renderAll() {
-    renderCounts();
+    // counts
+    document.getElementById('cnt-all').textContent = torrents.length;
+    document.getElementById('cnt-dl').textContent = torrents.filter(t => t.status==='Downloading').length;
+    document.getElementById('cnt-seed').textContent = torrents.filter(t => t.status==='Seeding').length;
+    document.getElementById('cnt-stall').textContent = torrents.filter(t => t.status==='Stalled').length;
     renderTable();
     renderStatusBar();
-    if (selectedHash) renderDetail();
-}
-
-function renderCounts() {
-    const all = torrents.length;
-    const dl = torrents.filter(t => t.status === 'Downloading').length;
-    const seed = torrents.filter(t => t.status === 'Seeding').length;
-    const stall = torrents.filter(t => t.status === 'Stalled').length;
-    document.getElementById('cnt-all').textContent = all;
-    document.getElementById('cnt-dl').textContent = dl;
-    document.getElementById('cnt-seed').textContent = seed;
-    document.getElementById('cnt-stall').textContent = stall;
+    if (selHash) renderDetail();
 }
 
 function renderTable() {
     const tbody = document.getElementById('tbody');
-    const filtered = getFiltered();
-
-    if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10"><div id="empty-state">
-            <div class="empty-icon">🛰️</div>
-            <p>${torrents.length === 0 ? 'No active torrents. Click Add or drag a .torrent file.' : 'No torrents match your filter.'}</p>
-        </div></td></tr>`;
+    const rows = filtered();
+    if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="10"><div id="empty"><div class="ei">🛰️</div>
+            <p>${torrents.length===0?'No active torrents. Click Add or drag a .torrent file.':'No torrents match filter.'}</p></div></td></tr>`;
         return;
     }
-
-    tbody.innerHTML = filtered.map(t => {
-        const isSelected = t.info_hash === selectedHash;
-        const fillClass = t.status === 'Seeding' ? 'seed' : t.status === 'Downloading' ? 'dl' : 'stall';
-
-        return `<tr class="${isSelected ? 'selected' : ''}"
-            onclick="selectTorrent('${t.info_hash}')"
-            oncontextmenu="showCtxMenu(event, '${t.info_hash}')">
-            <td class="col-name" title="${t.name}">${t.name}</td>
-            <td class="col-size mono" style="text-align:right">${t.size}</td>
-            <td class="col-progress">
-                <div class="tprogress">
-                    <div class="tprogress-fill ${fillClass}" style="width:${t.progress}%"></div>
-                    <div class="tprogress-label">${t.progress.toFixed(1)}%</div>
-                </div>
-            </td>
-            <td class="col-status">
-                <span class="badge ${t.status.toLowerCase()}">
-                    <span class="badge-dot"></span>${t.status}
-                </span>
-            </td>
-            <td class="col-seeds mono" style="text-align:right; color:var(--green)">${t.status === 'Seeding' ? t.peers_count : '—'}</td>
-            <td class="col-peers mono" style="text-align:right">${t.peers_count}</td>
-            <td class="col-dl mono dl-speed" style="text-align:right; color:${t.dl_speed_raw > 0 ? '#5bb8ff' : 'var(--text-muted)'}">${t.dl_speed}</td>
-            <td class="col-ul mono ul-speed" style="text-align:right; color:${t.ul_speed_raw > 0 ? '#a78bfa' : 'var(--text-muted)'}">${t.ul_speed}</td>
-            <td class="col-eta mono" style="text-align:right; color:var(--text-dim)">${t.eta || '—'}</td>
-            <td class="col-ratio mono" style="text-align:right; color:${t.ratio >= 1 ? 'var(--green)' : 'var(--text-dim)'}">${t.ratio.toFixed(3)}</td>
+    tbody.innerHTML = rows.map(t => {
+        const fc = t.status==='Seeding'?'seed':t.status==='Downloading'?'dl':'stall';
+        return `<tr class="${t.info_hash===selHash?'sel':''}"
+            onclick="selectT('${t.info_hash}')"
+            oncontextmenu="showCtx(event,'${t.info_hash}')">
+            <td class="cn" title="${t.name}">${t.name}</td>
+            <td class="csz mono" style="text-align:right">${t.size}</td>
+            <td class="cp"><div class="bar">
+                <div class="bar-fill ${fc}" style="width:${t.progress}%"></div>
+                <div class="bar-lbl">${t.progress.toFixed(1)}%</div>
+            </div></td>
+            <td class="cst"><span class="badge ${t.status.toLowerCase()}">
+                <span class="badge-dot"></span>${t.status}</span></td>
+            <td class="csd mono" style="text-align:right;color:var(--green)">${t.status==='Seeding'?t.peers_count:'—'}</td>
+            <td class="cpe mono" style="text-align:right">${t.peers_count}</td>
+            <td class="cdl mono" style="text-align:right;color:${t.dl_speed_raw>0?'#5bb8ff':'var(--text-muted)'}">${t.dl_speed}</td>
+            <td class="cul mono" style="text-align:right;color:${t.ul_speed_raw>0?'#a78bfa':'var(--text-muted)'}">${t.ul_speed}</td>
+            <td class="ceta mono" style="text-align:right;color:var(--text-dim)">${t.eta||'—'}</td>
+            <td class="crt mono" style="text-align:right;color:${t.ratio>=1?'var(--green)':'var(--text-dim)'}">${t.ratio.toFixed(3)}</td>
         </tr>`;
     }).join('');
 }
 
 function renderStatusBar() {
-    const totalDl = torrents.reduce((s, t) => s + (t.dl_speed_raw || 0), 0);
-    const totalUl = torrents.reduce((s, t) => s + (t.ul_speed_raw || 0), 0);
-    const totalPeers = torrents.reduce((s, t) => s + t.peers_count, 0);
-    document.getElementById('sb-dl').textContent = fmtBytes(totalDl) + '/s';
-    document.getElementById('sb-ul').textContent = fmtBytes(totalUl) + '/s';
-    document.getElementById('sb-count').textContent = torrents.length;
-    document.getElementById('sb-peers').textContent = totalPeers;
+    const dl = torrents.reduce((s,t) => s+(t.dl_speed_raw||0),0);
+    const ul = torrents.reduce((s,t) => s+(t.ul_speed_raw||0),0);
+    document.getElementById('sb-dl').textContent = fmtBytes(dl)+'/s';
+    document.getElementById('sb-ul').textContent = fmtBytes(ul)+'/s';
+    document.getElementById('sb-cnt').textContent = torrents.length;
+    document.getElementById('sb-peers').textContent = torrents.reduce((s,t)=>s+t.peers_count,0);
 }
 
 function renderDetail() {
-    const t = torrents.find(x => x.info_hash === selectedHash);
-    if (!t) {
-        document.getElementById('detail-content').innerHTML =
-            '<div id="no-selection" style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center;">Select a torrent to see details</div>';
-        return;
-    }
+    const t = torrents.find(x => x.info_hash===selHash);
+    const dc = document.getElementById('det-body');
+    if (!t) { dc.innerHTML='<div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">Select a torrent to see details</div>'; return; }
 
-    const dc = document.getElementById('detail-content');
-
-    if (activeDetailTab === 'general') {
-        dc.innerHTML = `<div class="general-grid">
-            <div class="gen-item"><span class="gen-label">Name</span><span class="gen-value">${t.name}</span></div>
-            <div class="gen-item"><span class="gen-label">Size</span><span class="gen-value">${t.size}</span></div>
-            <div class="gen-item"><span class="gen-label">Status</span><span class="gen-value">${t.status}</span></div>
-            <div class="gen-item"><span class="gen-label">Downloaded</span><span class="gen-value">${t.downloaded}</span></div>
-            <div class="gen-item"><span class="gen-label">Uploaded</span><span class="gen-value">${t.uploaded}</span></div>
-            <div class="gen-item"><span class="gen-label">Ratio</span><span class="gen-value">${t.ratio}</span></div>
-            <div class="gen-item"><span class="gen-label">DL Speed</span><span class="gen-value" style="color:#5bb8ff">${t.dl_speed}</span></div>
-            <div class="gen-item"><span class="gen-label">UL Speed</span><span class="gen-value" style="color:#a78bfa">${t.ul_speed}</span></div>
-            <div class="gen-item"><span class="gen-label">ETA</span><span class="gen-value">${t.eta || '—'}</span></div>
-            <div class="gen-item"><span class="gen-label">Peers</span><span class="gen-value">${t.peers_count}</span></div>
-            <div class="gen-item"><span class="gen-label">Files</span><span class="gen-value">${t.num_files}</span></div>
-            <div class="gen-item"><span class="gen-label">Hash</span><span class="gen-value" style="font-size:10px;color:var(--text-muted)">${t.info_hash.substring(0,20)}…</span></div>
+    if (detTab==='general') {
+        dc.innerHTML = `<div class="gen-grid">
+            <div class="gen-item"><span class="gen-lbl">Name</span><span class="gen-val">${t.name}</span></div>
+            <div class="gen-item"><span class="gen-lbl">Size</span><span class="gen-val">${t.size}</span></div>
+            <div class="gen-item"><span class="gen-lbl">Status</span><span class="gen-val">${t.status}</span></div>
+            <div class="gen-item"><span class="gen-lbl">Downloaded</span><span class="gen-val">${t.downloaded}</span></div>
+            <div class="gen-item"><span class="gen-lbl">Uploaded</span><span class="gen-val">${t.uploaded}</span></div>
+            <div class="gen-item"><span class="gen-lbl">Ratio</span><span class="gen-val">${t.ratio}</span></div>
+            <div class="gen-item"><span class="gen-lbl">↓ Speed</span><span class="gen-val" style="color:#5bb8ff">${t.dl_speed}</span></div>
+            <div class="gen-item"><span class="gen-lbl">↑ Speed</span><span class="gen-val" style="color:#a78bfa">${t.ul_speed}</span></div>
+            <div class="gen-item"><span class="gen-lbl">ETA</span><span class="gen-val">${t.eta||'—'}</span></div>
+            <div class="gen-item"><span class="gen-lbl">Peers</span><span class="gen-val">${t.peers_count}</span></div>
+            <div class="gen-item"><span class="gen-lbl">Files</span><span class="gen-val">${t.num_files}</span></div>
+            <div class="gen-item"><span class="gen-lbl">Hash</span><span class="gen-val" style="font-size:10px;color:var(--text-muted)">${t.info_hash.substring(0,24)}…</span></div>
+            <div class="gen-item" style="grid-column:1/-1"><span class="gen-lbl">Save Dir</span>
+                <span class="gen-val" style="font-size:11px;color:var(--accent);word-break:break-all">${t.save_dir||'—'}</span></div>
         </div>`;
-    } else if (activeDetailTab === 'trackers') {
+    } else if (detTab==='trackers') {
         const rows = t.details.trackers.length
-            ? t.details.trackers.map(tr => `<tr>
+            ? t.details.trackers.map(tr=>`<tr>
                 <td style="word-break:break-all">${tr.url}</td>
-                <td class="${tr.status === 'Working' ? 'tr-working' : 'tr-failed'}">${tr.status}</td>
-                <td style="text-align:right; color:var(--green)">${tr.seeders ?? '—'}</td>
-                <td style="text-align:right">${tr.leechers ?? '—'}</td>
+                <td class="${tr.status==='Working'?'ok':'fail'}">${tr.status}</td>
+                <td style="text-align:right;color:var(--green)">${tr.seeders??'—'}</td>
+                <td style="text-align:right">${tr.leechers??'—'}</td>
+                <td style="text-align:right;color:var(--text-muted)">${tr.interval?tr.interval+'s':'—'}</td>
             </tr>`).join('')
-            : `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">No trackers</td></tr>`;
-
-        dc.innerHTML = `<table class="detail-table">
-            <thead><tr>
-                <th>URL</th><th style="width:80px">Status</th>
-                <th style="width:60px;text-align:right">Seeds</th>
-                <th style="width:60px;text-align:right">Leechers</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-        </table>`;
-    } else if (activeDetailTab === 'peers') {
+            : `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text-muted)">No trackers</td></tr>`;
+        dc.innerHTML=`<table class="dtable"><thead><tr>
+            <th>URL</th><th style="width:80px">Status</th>
+            <th style="width:60px;text-align:right">Seeds</th>
+            <th style="width:60px;text-align:right">Peers</th>
+            <th style="width:70px;text-align:right">Interval</th>
+        </tr></thead><tbody>${rows}</tbody></table>`;
+    } else if (detTab==='peers') {
         const rows = t.details.peers.length
-            ? t.details.peers.map(p => `<tr>
+            ? t.details.peers.map(p=>`<tr>
                 <td style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">${p.address}</td>
                 <td>${p.client}</td>
-                <td>
-                    <div class="tprogress" style="height:12px">
-                        <div class="tprogress-fill dl" style="width:${p.progress}%"></div>
-                        <div class="tprogress-label" style="font-size:9.5px">${p.progress}%</div>
-                    </div>
-                </td>
-                <td style="color:${p.choked ? 'var(--red)' : 'var(--green)'}; font-size:11px">
-                    ${p.choked ? 'Choked' : 'Unchoked'}
-                </td>
+                <td><div class="bar" style="height:12px">
+                    <div class="bar-fill dl" style="width:${p.progress}%"></div>
+                    <div class="bar-lbl" style="font-size:9.5px">${p.progress}%</div>
+                </div></td>
+                <td style="color:${p.choked?'var(--red)':'var(--green)'};font-size:11px">${p.choked?'Choked':'Unchoked'}</td>
             </tr>`).join('')
-            : `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">No connected peers</td></tr>`;
-
-        dc.innerHTML = `<table class="detail-table">
-            <thead><tr>
-                <th>Address</th><th style="width:100px">Client</th>
-                <th style="width:120px">Progress</th>
-                <th style="width:80px">Choke</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-        </table>`;
-    } else if (activeDetailTab === 'files') {
+            : `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">No peers</td></tr>`;
+        dc.innerHTML=`<table class="dtable"><thead><tr>
+            <th>Address</th><th style="width:100px">Client</th>
+            <th style="width:120px">Progress</th><th style="width:80px">Choke</th>
+        </tr></thead><tbody>${rows}</tbody></table>`;
+    } else if (detTab==='files') {
         const rows = t.details.files.length
-            ? t.details.files.map(f => `<tr>
-                <td title="${f.name}">${f.name}</td>
+            ? t.details.files.map(f=>`<tr>
+                <td title="${f.name}">${f.selected?'✓ ':''}${f.name}</td>
                 <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px">${f.size}</td>
-                <td style="width:120px">
-                    <div class="tprogress" style="height:12px">
-                        <div class="tprogress-fill dl" style="width:${f.progress}%"></div>
-                        <div class="tprogress-label" style="font-size:9.5px">${f.progress}%</div>
-                    </div>
-                </td>
+                <td style="width:130px"><div class="bar" style="height:12px">
+                    <div class="bar-fill dl" style="width:${f.progress}%"></div>
+                    <div class="bar-lbl" style="font-size:9.5px">${f.progress.toFixed(1)}%</div>
+                </div></td>
             </tr>`).join('')
             : `<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text-muted)">No files</td></tr>`;
-
-        dc.innerHTML = `<table class="detail-table">
-            <thead><tr>
-                <th>Name</th>
-                <th style="width:90px;text-align:right">Size</th>
-                <th style="width:130px">Progress</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-        </table>`;
+        dc.innerHTML=`<table class="dtable"><thead><tr>
+            <th>Name</th><th style="width:90px;text-align:right">Size</th>
+            <th style="width:130px">Progress</th>
+        </tr></thead><tbody>${rows}</tbody></table>`;
     }
 }
 
-// ─── Interactions ────────────────────────────────────────────────
-function selectTorrent(hash) {
-    selectedHash = hash;
-    renderTable();
-    renderDetail();
-}
-
-function setFilter(filter, el) {
-    activeFilter = filter;
-    document.querySelectorAll('.sidebar-item').forEach(e => e.classList.remove('active'));
+// ── Interactions ─────────────────────────────────────────────────────────────
+function selectT(hash) { selHash=hash; renderTable(); renderDetail(); }
+function setFilter(f,el) {
+    activeFilter=f;
+    document.querySelectorAll('.sb-item').forEach(e=>e.classList.remove('active'));
     el.classList.add('active');
     renderTable();
 }
-
-function filterTable(q) {
-    searchQuery = q;
+function filterTable(q) { searchQuery=q; renderTable(); }
+function sortBy(k) {
+    if (sortKey===k) sortAsc=!sortAsc; else { sortKey=k; sortAsc=true; }
     renderTable();
 }
-
-function sortBy(key) {
-    if (sortKey === key) sortAsc = !sortAsc;
-    else { sortKey = key; sortAsc = true; }
-    document.querySelectorAll('#torrent-table th').forEach(th => th.classList.remove('sorted'));
-    renderTable();
-}
-
-function switchDetailTab(tab) {
-    activeDetailTab = tab;
-    document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.detail-tab').forEach(t => {
-        if (t.textContent.toLowerCase().startsWith(tab)) t.classList.add('active');
-    });
+function switchTab(t) {
+    detTab=t;
+    document.querySelectorAll('.dtab').forEach(e=>e.classList.remove('active'));
+    document.querySelectorAll('.dtab').forEach(e=>{ if(e.textContent.toLowerCase().startsWith(t)) e.classList.add('active'); });
     renderDetail();
 }
 
-// ─── Context Menu ────────────────────────────────────────────────
-function showCtxMenu(e, hash) {
-    e.preventDefault();
-    ctxTargetHash = hash;
-    const menu = document.getElementById('ctx-menu');
-    menu.style.display = 'block';
-    menu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
-    menu.style.top = Math.min(e.clientY, window.innerHeight - 100) + 'px';
+// ── Context menu ─────────────────────────────────────────────────────────────
+function showCtx(e,hash) {
+    e.preventDefault(); ctxHash=hash;
+    const m=document.getElementById('ctx');
+    m.style.display='block';
+    m.style.left=Math.min(e.clientX,window.innerWidth-170)+'px';
+    m.style.top=Math.min(e.clientY,window.innerHeight-100)+'px';
 }
+function ctxCopy() { document.getElementById('ctx').style.display='none'; if(ctxHash) navigator.clipboard.writeText(ctxHash); }
+function ctxDelete() { document.getElementById('ctx').style.display='none'; if(ctxHash) deleteTorrent(ctxHash); }
+document.addEventListener('click',()=>document.getElementById('ctx').style.display='none');
 
-function ctxAction(action) {
-    document.getElementById('ctx-menu').style.display = 'none';
-    if (!ctxTargetHash) return;
-    if (action === 'delete') deleteTorrent(ctxTargetHash);
-    else if (action === 'copy_hash') navigator.clipboard.writeText(ctxTargetHash);
-}
-
-document.addEventListener('click', () => {
-    document.getElementById('ctx-menu').style.display = 'none';
-});
-
-// ─── Delete ──────────────────────────────────────────────────────
-async function deleteSelected() {
-    if (!selectedHash) return;
-    await deleteTorrent(selectedHash);
-}
-
+async function deleteSelected() { if(selHash) await deleteTorrent(selHash); }
 async function deleteTorrent(hash) {
     if (!confirm('Remove this torrent?')) return;
-    try {
-        await fetch(`/api/delete/${hash}`, { method: 'DELETE' });
-        if (selectedHash === hash) selectedHash = null;
-        await fetchTorrents();
-    } catch {}
+    try { await fetch(`/api/delete/${hash}`,{method:'DELETE'}); if(selHash===hash) selHash=null; await fetchTorrents(); } catch {}
 }
 
-// ─── Modal & Upload ──────────────────────────────────────────────
-function openModal() {
-    document.getElementById('modal-overlay').classList.add('open');
+// ── Two-step modal ────────────────────────────────────────────────────────────
+function openStep1() { document.getElementById('mo1').classList.add('open'); }
+function closeStep1() {
+    document.getElementById('mo1').classList.remove('open');
+    selFile=null; document.getElementById('fi').value='';
+    document.getElementById('sel-info').classList.remove('show');
+    document.getElementById('btn-next').disabled=true;
+}
+function backToStep1() {
+    document.getElementById('mo2').classList.remove('open');
+    openStep1();
 }
 
-function closeModal() {
-    document.getElementById('modal-overlay').classList.remove('open');
-    selectedFile = null;
-    document.getElementById('file-input').value = '';
-    document.getElementById('file-selected-info').classList.remove('show');
-    document.getElementById('btn-add-confirm').disabled = true;
-}
-
-function handleFileSelect(input) {
+function handleFile1(input) {
     if (input.files && input.files[0]) {
-        selectedFile = input.files[0];
-        document.getElementById('file-selected-name').textContent = selectedFile.name;
-        document.getElementById('file-selected-info').classList.add('show');
-        document.getElementById('btn-add-confirm').disabled = false;
+        selFile=input.files[0];
+        document.getElementById('sel-name').textContent=selFile.name;
+        document.getElementById('sel-info').classList.add('show');
+        document.getElementById('btn-next').disabled=false;
     }
 }
-
-function handleModalDrop(e) {
+function handleDrop1(e) {
     e.preventDefault();
-    document.getElementById('modal-drop').classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.torrent')) {
-        selectedFile = file;
-        document.getElementById('file-selected-name').textContent = file.name;
-        document.getElementById('file-selected-info').classList.add('show');
-        document.getElementById('btn-add-confirm').disabled = false;
+    document.getElementById('drop1').classList.remove('dv');
+    const f=e.dataTransfer.files[0];
+    if (f && f.name.endsWith('.torrent')) {
+        selFile=f;
+        document.getElementById('sel-name').textContent=f.name;
+        document.getElementById('sel-info').classList.add('show');
+        document.getElementById('btn-next').disabled=false;
     }
 }
 
-async function submitTorrent() {
-    if (!selectedFile) return;
-    const btn = document.getElementById('btn-add-confirm');
-    btn.disabled = true;
-    btn.textContent = 'Adding...';
-    const fd = new FormData();
-    fd.append('file', selectedFile);
+async function uploadAndNext() {
+    if (!selFile) return;
+    const btn=document.getElementById('btn-next');
+    btn.disabled=true; btn.textContent='Parsing…';
+    const fd=new FormData(); fd.append('file',selFile);
     try {
-        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.success) {
-            closeModal();
+        const r=await fetch('/api/upload',{method:'POST',body:fd});
+        const d=await r.json();
+        if (!d.success) { alert(d.error||'Upload failed'); btn.disabled=false; btn.textContent='Next →'; return; }
+        pendingHash=d.info_hash;
+        pendingFiles=d.files||[];
+        closeStep1();
+        showStep2(d.name, d.files||[]);
+    } catch(e) { alert('Connection error'); btn.disabled=false; btn.textContent='Next →'; }
+}
+
+function showStep2(name, files) {
+    document.getElementById('mo2-name').textContent=`${name}  •  ${files.length} file${files.length!==1?'s':''}`;
+    const list=document.getElementById('file-list');
+    list.innerHTML=files.map(f=>`
+        <div class="fl-item" onclick="toggleFile(${f.index},this)">
+            <input type="checkbox" id="fc-${f.index}" checked>
+            <span class="fl-name" title="${f.name}">${f.name}</span>
+            <span class="fl-size">${f.size}</span>
+        </div>`).join('');
+    updateSelCountLabel();
+    document.getElementById('chk-all').checked=true;
+    document.getElementById('mo2').classList.add('open');
+}
+
+function toggleFile(idx,el) {
+    const cb=document.getElementById(`fc-${idx}`);
+    cb.checked=!cb.checked;
+    updateSelCountLabel();
+}
+function toggleAll(checked) {
+    pendingFiles.forEach(f=>{ const cb=document.getElementById(`fc-${f.index}`); if(cb) cb.checked=checked; });
+    updateSelCountLabel();
+}
+function updateSelCountLabel() {
+    const total=pendingFiles.length;
+    const sel=pendingFiles.filter(f=>{ const cb=document.getElementById(`fc-${f.index}`); return cb&&cb.checked; }).length;
+    document.getElementById('sel-count-lbl').textContent=`${sel} / ${total} selected`;
+    // Keep "select all" checkbox in sync
+    document.getElementById('chk-all').checked=(sel===total);
+    document.getElementById('chk-all').indeterminate=(sel>0&&sel<total);
+}
+
+async function startDownload() {
+    const selected=pendingFiles.filter(f=>{ const cb=document.getElementById(`fc-${f.index}`); return cb&&cb.checked; }).map(f=>f.index);
+    if (!selected.length) { alert('Please select at least one file.'); return; }
+    const btn=document.getElementById('btn-start');
+    btn.disabled=true; btn.textContent='Starting…';
+    try {
+        const r=await fetch('/api/start',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({info_hash:pendingHash,selected_indices:selected})
+        });
+        const d=await r.json();
+        if (d.success) {
+            document.getElementById('mo2').classList.remove('open');
+            pendingHash=null; pendingFiles=[];
             await fetchTorrents();
-        } else {
-            alert(data.error || 'Failed to add torrent');
-            btn.disabled = false;
-            btn.textContent = 'Add Torrent';
-        }
-    } catch {
-        btn.disabled = false;
-        btn.textContent = 'Add Torrent';
-    }
+        } else { alert(d.error||'Failed to start'); }
+    } catch { alert('Connection error'); }
+    btn.disabled=false; btn.textContent='Start Download';
 }
 
-// ─── Drag & Drop on Window ───────────────────────────────────────
-let dragCounter = 0;
-document.addEventListener('dragenter', e => {
-    if ([...e.dataTransfer.items].some(i => i.kind === 'file')) {
-        dragCounter++;
-        document.getElementById('dropzone').classList.add('active');
-    }
-});
-document.addEventListener('dragleave', () => {
-    dragCounter--;
-    if (dragCounter <= 0) {
-        dragCounter = 0;
-        document.getElementById('dropzone').classList.remove('active');
-    }
-});
-document.addEventListener('dragover', e => e.preventDefault());
-document.addEventListener('drop', async e => {
-    e.preventDefault();
-    dragCounter = 0;
-    document.getElementById('dropzone').classList.remove('active');
-    const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.torrent')) {
-        const fd = new FormData();
-        fd.append('file', file);
-        try {
-            const res = await fetch('/api/upload', { method: 'POST', body: fd });
-            const data = await res.json();
-            if (data.success) await fetchTorrents();
-            else alert(data.error || 'Failed');
-        } catch {}
-    }
-});
-
-// ─── Resize Detail Panel ─────────────────────────────────────────
-let resizing = false, resizeStartY = 0, resizeStartH = 0;
-
-function startResize(e) {
-    resizing = true;
-    resizeStartY = e.clientY;
-    resizeStartH = document.getElementById('detail-panel').offsetHeight;
-    document.getElementById('resize-handle').classList.add('dragging');
-    document.body.classList.add('no-select');
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(notif) {
+    const wrap=document.getElementById('toast-wrap');
+    const el=document.createElement('div');
+    el.className='toast';
+    el.innerHTML=`
+        <div class="toast-header">
+            <span class="toast-icon">✅</span>
+            <span>Download Complete</span>
+            <button class="toast-close" onclick="dismissToast(this.parentElement.parentElement)">✕</button>
+        </div>
+        <div class="toast-body">
+            <strong style="color:var(--text)">${notif.name}</strong>
+            <div class="toast-files">${(notif.files||[]).map(f=>`<div>• ${f}</div>`).join('')}</div>
+            <div style="margin-top:4px">📁 Saved to:</div>
+            <div class="toast-path">${notif.save_dir}</div>
+        </div>
+        <div class="toast-progress"><div class="toast-progress-fill"></div></div>`;
+    wrap.appendChild(el);
+    setTimeout(()=>dismissToast(el), 5500);
 }
 
-document.addEventListener('mousemove', e => {
-    if (!resizing) return;
-    const diff = resizeStartY - e.clientY;
-    const newH = Math.max(80, Math.min(500, resizeStartH + diff));
-    document.getElementById('detail-panel').style.height = newH + 'px';
-});
+function dismissToast(el) {
+    el.classList.add('leaving');
+    setTimeout(()=>el.remove(), 260);
+}
 
-document.addEventListener('mouseup', () => {
-    if (resizing) {
-        resizing = false;
-        document.getElementById('resize-handle').classList.remove('dragging');
-        document.body.classList.remove('no-select');
+// ── Global drag-and-drop ──────────────────────────────────────────────────────
+let dragN=0;
+document.addEventListener('dragenter',e=>{
+    if([...e.dataTransfer.items].some(i=>i.kind==='file')){ dragN++; document.getElementById('dz').classList.add('on'); }
+});
+document.addEventListener('dragleave',()=>{ if(--dragN<=0){ dragN=0; document.getElementById('dz').classList.remove('on'); } });
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',async e=>{
+    e.preventDefault(); dragN=0; document.getElementById('dz').classList.remove('on');
+    const f=e.dataTransfer.files[0];
+    if (f&&f.name.endsWith('.torrent')) {
+        selFile=f;
+        document.getElementById('sel-name').textContent=f.name;
+        document.getElementById('sel-info').classList.add('show');
+        document.getElementById('btn-next').disabled=false;
+        uploadAndNext();
     }
 });
 
-// ─── Modal close on backdrop ─────────────────────────────────────
-document.getElementById('modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modal-overlay')) closeModal();
-});
+// ── Resize ────────────────────────────────────────────────────────────────────
+let resizing=false, ry=0, rh0=0;
+function startResize(e) { resizing=true; ry=e.clientY; rh0=document.getElementById('det').offsetHeight; document.getElementById('rh').classList.add('drag'); document.body.classList.add('no-sel'); }
+document.addEventListener('mousemove',e=>{ if(!resizing) return; const d=ry-e.clientY; document.getElementById('det').style.height=Math.max(80,Math.min(500,rh0+d))+'px'; });
+document.addEventListener('mouseup',()=>{ if(resizing){ resizing=false; document.getElementById('rh').classList.remove('drag'); document.body.classList.remove('no-sel'); } });
 
-// ─── Keyboard ────────────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
-    if (e.key === 'Delete' && selectedHash && document.activeElement === document.body) {
-        deleteSelected();
-    }
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){ closeStep1(); document.getElementById('mo2').classList.remove('open'); }
+    if(e.key==='Delete'&&selHash&&document.activeElement===document.body) deleteSelected();
 });
+document.getElementById('mo1').addEventListener('click',e=>{ if(e.target===document.getElementById('mo1')) closeStep1(); });
+document.getElementById('mo2').addEventListener('click',e=>{ if(e.target===document.getElementById('mo2')) document.getElementById('mo2').classList.remove('open'); });
 
-// ─── Utils ───────────────────────────────────────────────────────
+// ── Utils ─────────────────────────────────────────────────────────────────────
 function fmtBytes(n) {
-    if (!n) return '0 B';
-    const units = ['B','KB','MB','GB','TB'];
-    let i = 0;
-    while (Math.abs(n) >= 1024 && i < units.length - 1) { n /= 1024; i++; }
-    return n.toFixed(2) + ' ' + units[i];
+    if(!n) return '0 B';
+    const u=['B','KB','MB','GB','TB']; let i=0;
+    while(Math.abs(n)>=1024&&i<u.length-1){ n/=1024; i++; }
+    return n.toFixed(2)+' '+u[i];
 }
 
-// ─── Init ────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────────
 fetchTorrents();
 setInterval(fetchTorrents, 2000);
+setInterval(fetchNotifications, 2000);
 </script>
 </body>
 </html>
