@@ -4,18 +4,16 @@ import asyncio
 import copy
 import json
 from bitstring import BitArray
+import logging
 
 from .core.file_utils import FileTree
 from .core import bencode_wrapper
 from .core.utils import PieceWriter, gen_secure_peer_id
-import logging
-
-logger = logging.getLogger(__name__)
-
 from .peer import Peer
 from .tracker_factory import TrackerFactory
 from .downloader import FilesDownloadManager
 
+logger = logging.getLogger(__name__)
 class Torrent:
     def __init__(self, torrent_file) -> None:
         """
@@ -101,7 +99,7 @@ class Torrent:
     async def init(self):
         try:
             self.server = await asyncio.start_server(self.handle_incoming_connection, "0.0.0.0", 6887)
-            logger.info(f"Torrent Initialization: TCP Server listening on 0.0.0.0:6887")
+            logger.info("Torrent Initialization: TCP Server listening on 0.0.0.0:6887")
         except Exception as e:
             logger.error(f"Failed to start TCP Server on 6887: {e}")
 

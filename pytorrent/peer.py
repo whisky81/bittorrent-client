@@ -183,7 +183,7 @@ class Peer:
                 # Count only PIECE messages (id=7)
                 if payload[0:1] == b'\x07':
                     received += 1
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, asyncio.IncompleteReadError):
             pass  # Return what we have so far
         except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError, OSError) as e:
             logger.debug(f"{self} stream_pieces connection error: {e}")
@@ -205,7 +205,7 @@ class Peer:
                 await Handler(artifacts, self).handle()
             except asyncio.TimeoutError:
                 pass  # No data in 30s is normal — keep loop alive
-            except (ConnectionResetError, ConnectionAbortedError, ConnectionRefusedError, BrokenPipeError, OSError) as e:
+            except (ConnectionResetError, ConnectionAbortedError, ConnectionRefusedError, BrokenPipeError, IOError, OSError) as e:
                 logger.debug(f"{self} Connection lost in listen loop: {e}")
                 await self.disconnect(f"Connection lost: {e}")
                 break

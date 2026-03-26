@@ -140,6 +140,8 @@ class FilesDownloadManager:
         all_tasks = [t for tasks in piece_tasks.values() for t in tasks]
 
         while piece_tasks:
+            if not all_tasks:
+                break
             done, _ = await asyncio.wait(all_tasks, return_when=asyncio.FIRST_COMPLETED)
 
             for task in done:
@@ -163,6 +165,10 @@ class FilesDownloadManager:
 
                 completed.append(piece)
                 logger.info(f"[End-Game] Piece #{pn} completed")
+
+        # Put back incomplete pieces
+        for pn in piece_tasks:
+            self.file_pieces.put_nowait((1, pn))
 
         # Return peers to queue
         for i, peer in enumerate(peers_snapshot):

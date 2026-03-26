@@ -156,7 +156,7 @@ class Piece:
                     await peers_man.put((priority + 1, peer))
                     priority, peer = await peers_man.get()
 
-            except (BrokenPipeError, IOError, asyncio.TimeoutError) as e:
+            except (BrokenPipeError, IOError, asyncio.TimeoutError, Exception) as e:
                 logger.debug(f"Piece #{self.num}: Error downloading from {peer}: {e}")
                 current_priority, current_peer = priority, peer
                 # Put back with high penalty if it's a connection error

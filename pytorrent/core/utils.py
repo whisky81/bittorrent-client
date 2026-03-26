@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
-import secrets
+import secrets  # noqa: E402
 
 class Block:
 	def __init__(self, piece_num=-1, offset=-1, data=bytes()):
@@ -22,8 +22,12 @@ class PieceWriter:
         Path(self.directory).mkdir(exist_ok=True)
     
     def __enter__(self):
-        filepath = f"{self.directory}/{self.file.name}"
-        self.target_file = open(filepath, "wb")
+        filepath = Path(self.directory) / self.file.name
+        # Try to open without truncation if file exists, else create it
+        if filepath.exists():
+            self.target_file = open(filepath, "rb+")
+        else:
+            self.target_file = open(filepath, "wb")
         return self 
     
     def write(self, piece):
@@ -45,7 +49,7 @@ def gen_secure_peer_id():
 
 class PieceReader:
     @staticmethod
-    def read(torrent_info: dict, index: int, begin: int, length: int) -> bytes:
+    def read(torrent_info: dict, index: int, begin: int, length: int, base_path: str = ".") -> bytes:
         from .file_utils import FileTree
         from pathlib import Path
         
@@ -66,12 +70,17 @@ class PieceReader:
             file_offset = abs_offset - current_offset
             read_len = min(bytes_to_read, file.size - file_offset)
             
-            filepath = Path(directory) / file.name
+            # Use base_path if provided
+            root = Path(base_path)
+            # Consistency with PieceWriter: always directory/file.name
+            filepath = root / directory / file.name
+            
             if filepath.exists():
                 with open(filepath, "rb") as f:
                     f.seek(file_offset)
                     result.extend(f.read(read_len))
             else:
+                logger.debug(f"PieceReader: File {filepath} not found.")
                 return bytes()
                 
             bytes_to_read -= read_len

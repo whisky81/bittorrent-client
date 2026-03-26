@@ -1,8 +1,12 @@
 .venv
 pytorrent/__pycache__
 pytorrent/core/__pycache__
-out.txt
+__pycache__
+
 imgs+note
-Blockchain - An Illustrated Guidebook To Understand Blockchain
+output.txt
 notes.txt
+
+Blockchain - An Illustrated Guidebook To Understand Blockchain
 pytorrent.log
+data
