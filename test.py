@@ -49,9 +49,8 @@ async def main():
     console.print("[bold blue]🔍 Initializing network...[/bold blue]")
     if downloadManager.is_already_downloaded(info_hash, name, [file.name]):
         console.print("[bold green]✅ This file is already downloaded. Skipping to SEED mode.[/bold green]")
-        return
         # Still need to init to load the save_dir into torrent_info for seeding
-        # await torrent.init(save_dir=save_dir)
+        await torrent.init(save_dir=save_dir)
     else:
         console.print("[bold blue]⬇  Starting download...[/bold blue]")
         await torrent.init(save_dir=save_dir)
@@ -80,7 +79,8 @@ async def main():
             await download_task
             progress.update(task_id, completed=file.size)
 
-        downloadManager.mark_downloaded(info_hash, save_dir, torrent_file_path)
+        # Use torrent.save_dir (the subfolder) to mark as completed
+        downloadManager.mark_downloaded(info_hash, torrent.save_dir, torrent_file_path)
         console.print("\n[bold green]🎉 Download complete![/bold green]")
         torrent.torrent_info["event"] = "completed"
 

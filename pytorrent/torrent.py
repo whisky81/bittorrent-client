@@ -135,9 +135,11 @@ class Torrent:
         interested_msgs = [peer.interested() for peer in self.peers]
         await asyncio.gather(*interested_msgs)
         
-        # Start maintenance loops
-        asyncio.create_task(self._tracker_announce_loop())
-        asyncio.create_task(self.maintain_peers())
+        # Start maintenance loops (if not already running)
+        if not getattr(self, "_loops_started", False):
+            asyncio.create_task(self._tracker_announce_loop())
+            asyncio.create_task(self.maintain_peers())
+            self._loops_started = True
 
         self.torrent_info["peers"] = peer_addrs
 
@@ -290,7 +292,11 @@ class Torrent:
 
     async def seed(self):
         logger.info(f"Torrent {self.name}: Entering SEED mode...")
-        asyncio.create_task(self._tracker_announce_loop())
+        # Start maintenance loops (if not already running)
+        if not getattr(self, "_loops_started", False):
+            asyncio.create_task(self._tracker_announce_loop())
+            asyncio.create_task(self.maintain_peers())
+            self._loops_started = True
 
         listen_tasks = []
         for peer in self.peers:

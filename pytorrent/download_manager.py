@@ -29,17 +29,32 @@ class DownloadManager:
         files: list[str], 
         torrent_file_path: Path|None=None
     ):
-        if info_hash not in self.data:
-            return False 
-        save_dir = Path(self.data[info_hash]["save_dir"])
+        save_dir = None
+        if info_hash in self.data:
+            save_dir = Path(self.data[info_hash]["save_dir"])
+        else:
+            # Speculative check: try default downloads/<name> folder
+            default_save_dir = Path.cwd() / "downloads" / name
+            if default_save_dir.exists() and default_save_dir.is_dir():
+                save_dir = default_save_dir
         
-        if not save_dir.exists() or save_dir.name != name:
+        if not save_dir:
             return False 
+            
+        # Verify specific folder name matches (redundancy check)
+        if save_dir.name != name:
+            return False
         
         for file_name in files:
             file_path = save_dir / file_name
             if not (file_path.exists() and file_path.is_file()):
                 return False 
+        
+        # If we arrived here via speculative check, record it
+        if info_hash not in self.data:
+            # Explicit check to satisfy type checker
+            actual_path = torrent_file_path if torrent_file_path is not None else Path("")
+            self.mark_downloaded(info_hash, save_dir, actual_path)
         
         if torrent_file_path and torrent_file_path.exists():
             self.data[info_hash]["torrent_file"] = str(torrent_file_path)

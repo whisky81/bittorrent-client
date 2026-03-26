@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pytorrent Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .logo i {
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .btn-add {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-add:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .torrent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .torrent-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            transition: all 0.2s;
+        }
+
+        .torrent-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .torrent-card.expanded {
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .torrent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .torrent-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex: 1;
+        }
+
+        .torrent-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            word-break: break-all;
+        }
+
+        .torrent-meta {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .torrent-speeds {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .speed-dl { color: #38bdf8; }
+        .speed-ul { color: #818cf8; }
+
+        .status-badge {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .progress-container {
+            width: 100%;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #818cf8);
+            border-radius: 5px;
+            transition: width 0.5s ease-out;
+            width: 0%;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+
+        .torrent-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: var(--text-dim);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* Details Section */
+        .torrent-details {
+            display: none;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .details-tabs {
+            display: flex;
+            gap: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 0.5rem 0;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .detail-table-container {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            color: var(--text-dim);
+            font-weight: 600;
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            color: var(--text-main);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: var(--bg);
+            border: 1px solid var(--glass-border);
+            padding: 2.5rem;
+            border-radius: 28px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 1rem;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .modal-input:focus {
+            outline: 2px solid var(--primary);
+            border-color: transparent;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: var(--text-dim);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <header>
+            <div class="logo">
+                <i class="fas fa-satellite-dish"></i>
+                Pytorrent
+            </div>
+            <button class="btn-add" onclick="toggleModal(true)">
+                <i class="fas fa-plus"></i>
+                Add Torrent
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Downloads</div>
+                <div class="stat-value" id="count-torrents">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Global Health</div>
+                <div class="stat-value" id="global-peers">0 Peers</div>
+            </div>
+        </div>
+
+        <div class="torrent-list" id="torrent-container">
+            <!-- Torrents will be injected here -->
+            <div style="text-align: center; padding: 4rem; color: var(--text-dim);">
+                <i class="fas fa-ghost" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>No active torrents found.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Torrent Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <div class="modal-title">New Torrent</div>
+            <p style="color: var(--text-dim); margin-bottom: 2rem; font-size: 0.9rem;">
+                Select a <b>.torrent</b> file from your computer to start downloading.
+            </p>
+            
+            <div style="margin-bottom: 2rem;">
+                <label for="torrent-file" style="display: block; margin-bottom: 0.75rem; color: var(--text-dim); font-size: 0.85rem; font-weight: 600;">TORRENT FILE</label>
+                <input type="file" id="torrent-file" accept=".torrent" class="modal-input">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="toggleModal(false)">Cancel</button>
+                <button class="btn-add" id="btn-submit-add">Add Torrent</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const torrentContainer = document.getElementById('torrent-container');
+        const countTorrents = document.getElementById('count-torrents');
+        const globalPeers = document.getElementById('global-peers');
+        
+        let expandedTorrents = new Set();
+        let activeTabs = {}; // info_hash -> 'peers' or 'trackers'
+
+        function toggleModal(show) {
+            document.getElementById('add-modal').style.display = show ? 'flex' : 'none';
+        }
+
+        function toggleDetails(infoHash) {
+            if (expandedTorrents.has(infoHash)) {
+                expandedTorrents.delete(infoHash);
+            } else {
+                expandedTorrents.add(infoHash);
+                if (!activeTabs[infoHash]) activeTabs[infoHash] = 'peers';
+            }
+            fetchTorrents();
+        }
+
+        function switchTab(infoHash, tab) {
+            activeTabs[infoHash] = tab;
+            fetchTorrents();
+        }
+
+        async function fetchTorrents() {
+            try {
+                const response = await fetch('/api/torrents');
+                const torrents = await response.json();
+                updateUI(torrents);
+            } catch (err) {
+                console.error('Failed to fetch torrents:', err);
+            }
+        }
+
+        function updateUI(torrents) {
+            countTorrents.innerText = torrents.length;
+            let totalPeers = 0;
+
+            if (torrents.length === 0) {
+                torrentContainer.innerHTML = `
+                    <div style="text-align: center; padding: 4rem; color: var(--text-dim);">
+                        <i class="fas fa-ghost" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>No active torrents found.</p>
+                    </div>
+                `;
+                globalPeers.innerText = '0 Peers';
+                return;
+            }
+
+            torrentContainer.innerHTML = torrents.map(t => {
+                totalPeers += t.peers_count;
+                const isExpanded = expandedTorrents.has(t.info_hash);
+                const activeTab = activeTabs[t.info_hash] || 'peers';
+
+                return `
+                    <div class="torrent-card ${isExpanded ? 'expanded' : ''}">
+                        <div class="torrent-header">
+                            <div class="torrent-info">
+                                <div class="torrent-name">${t.name}</div>
+                                <div class="torrent-speeds">
+                                    <span class="speed-dl"><i class="fas fa-arrow-down"></i> ${t.dl_speed}</span>
+                                    <span class="speed-ul"><i class="fas fa-arrow-up"></i> ${t.ul_speed}</span>
+                                </div>
+                            </div>
+                            <div class="status-badge">${t.status}</div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${t.progress}%"></div>
+                            </div>
+                            <div class="progress-stats">
+                                <span>${t.progress}% complete • ${t.size}</span>
+                                <span>↓ ${t.downloaded} • ↑ ${t.uploaded}</span>
+                            </div>
+                        </div>
+                        <div class="torrent-actions">
+                            <button class="btn-icon" title="Details" onclick="toggleDetails('${t.info_hash}')">
+                                <i class="fas fa-list"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" title="Remove" onclick="deleteTorrent('${t.info_hash}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+
+                        ${isExpanded ? `
+                        <div class="torrent-details" style="display: block;">
+                            <div class="details-tabs">
+                                <div class="tab ${activeTab === 'peers' ? 'active' : ''}" onclick="switchTab('${t.info_hash}', 'peers')">Peers (${t.details.peers.length})</div>
+                                <div class="tab ${activeTab === 'trackers' ? 'active' : ''}" onclick="switchTab('${t.info_hash}', 'trackers')">Trackers (${t.details.trackers.length})</div>
+                            </div>
+                            <div class="detail-table-container">
+                                ${activeTab === 'peers' ? `
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Address</th>
+                                            <th>Client</th>
+                                            <th>Progress</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${t.details.peers.length ? t.details.peers.map(p => `
+                                            <tr>
+                                                <td>${p.address}</td>
+                                                <td>${p.client}</td>
+                                                <td>${p.progress}%</td>
+                                            </tr>
+                                        `).join('') : '<tr><td colspan="3" style="text-align:center; color:var(--text-dim); padding:2rem;">No connected peers</td></tr>'}
+                                    </tbody>
+                                </table>
+                                ` : `
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>URL</th>
+                                            <th>Status</th>
+                                            <th>Peers Found</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${t.details.trackers.map(tr => `
+                                            <tr>
+                                                <td style="word-break: break-all;">${tr.url}</td>
+                                                <td><span style="color: ${tr.status === 'Working' ? 'var(--success)' : 'var(--danger)'}">${tr.status}</span></td>
+                                                <td>${tr.peers}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                                `}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            globalPeers.innerText = `${totalPeers} Peers`;
+        }
+
+        async function uploadTorrent() {
+            const fileInput = document.getElementById('torrent-file');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a .torrent file');
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-add');
+            btn.disabled = true;
+            btn.innerText = 'Uploading...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    toggleModal(false);
+                    fileInput.value = '';
+                    fetchTorrents();
+                } else {
+                    alert(result.error || 'Upload failed');
+                }
+            } catch (err) {
+                alert('Connection error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Add Torrent';
+            }
+        }
+
+        async function deleteTorrent(infoHash) {
+            if (!confirm('Are you sure you want to remove this torrent?')) return;
+            try {
+                await fetch(`/api/delete/${infoHash}`, { method: 'DELETE' });
+                fetchTorrents();
+            } catch (err) {
+                alert('Failed to delete');
+            }
+        }
+
+        document.getElementById('btn-submit-add').addEventListener('click', uploadTorrent);
+
+        // Initial fetch and Poll every 2 seconds
+        fetchTorrents();
+        setInterval(fetchTorrents, 2000);
+    </script>
+</body>
+</html>
