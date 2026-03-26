@@ -36,7 +36,7 @@ class PeerResponseParser:
             try:
                 if self.response[0] == 19:
                     self.parse_handshake()
-                    return self.artifacts 
+                    return self.artifacts
 
                 self.message_len = unpack(">I", self.response[:4])[0]
                 self.message_id = (
@@ -47,16 +47,27 @@ class PeerResponseParser:
 
                 if self.message_len == 0 and not self.message_id:
                     self.parse_keep_alive()
+                    continue
 
                 if self.message_id not in self.messages:
-                    logger.warning(f"PeerResponseParser: Unhandled message_id={self.message_id}, length={self.message_len}")
-                    self.response = bytes()
+                    logger.warning(
+                        f"PeerResponseParser: Unhandled message_id={self.message_id}, "
+                        f"length={self.message_len}"
+                    )
+                    # Skip this unknown message to avoid infinite loop
+                    self.response = self.response[4 + self.message_len:]
+                    continue
 
-                logger.debug(f"PeerResponseParser: Parsing message_id={self.message_id}, length={self.message_len}")
+                logger.debug(
+                    f"PeerResponseParser: Parsing message_id={self.message_id}, "
+                    f"length={self.message_len}"
+                )
                 self.messages[self.message_id]()
 
             except Exception as E:
-                logger.error(f"PeerResponseParser: Exception while parsing response - {E}")
+                logger.error(
+                    f"PeerResponseParser: Exception while parsing response - {E}"
+                )
                 self.response = bytes()
 
         return self.artifacts
@@ -89,13 +100,15 @@ class PeerResponseParser:
             self.response = self.response[17:]
 
     def parse_have(self):
+        # BUG FIX: accumulate multiple HAVE messages instead of overwriting
         message = self.response[:9]
         piece_index = unpack(">I", message[5:])[0]
         self.response = self.response[9:]
-        self.artifacts.update({"have": {piece_index: True}})
+        if "have" not in self.artifacts:
+            self.artifacts["have"] = {}
+        self.artifacts["have"][piece_index] = True
 
     def parse_piece(self):
-
         if "pieces" not in self.artifacts:
             self.artifacts["pieces"] = list()
         block_len = self.message_len - 9
