@@ -1,0 +1,31 @@
+làm cho save_dir có thể click để điều hướng đến vị trí lưu trữ trong disk sao cho độc lập nền tảng
+
+### 1. Kiến trúc hệ thống & Đa nhiệm (Multi-torrent)
+*   **Quản lý Download tập trung**: Xây dựng [DownloadManager] để theo dõi danh sách file đã tải xong, tránh tải lại và hỗ trợ resume.
+*   **Xử lý đa file**: Cải tiến logic để hỗ trợ tải từng file lẻ hoặc toàn bộ folder trong một torrent thông qua việc chọn index file.
+*   **Cơ chế lưu trữ**: Tự động tạo thư mục và phân loại file tải về theo cấu trúc cây thư mục của torrent.
+
+### 2. Tối ưu hóa Networking & Giao thức P2P
+*   **Sửa lỗi Port**: Chuyển từ port cố định sang port động (và sau đó chuẩn hóa về dải port BitTorrent tiêu chuẩn) để tránh xung đột khi chạy nhiều torrent.
+*   **Ổn định kết nối**: Cải thiện hàm [listen_forever] trong [peer.py] để xử lý luồng dữ liệu liên tục, giảm thiểu tình trạng "stall" (đứng hình) do phân mảnh gói tin TCP.
+*   **Duy trì Peer (Maintainance)**: Sửa lỗi vòng lặp vô hạn gây chiếm 100% CPU trong [torrent.py], bổ sung cơ chế quét và loại bỏ các peer lỗi/timeout định kỳ (mỗi 60 giây).
+
+### 3. Hiệu năng & Tài nguyên
+*   **Kiểm soát luồng (Throttling)**: Giới hạn số lượng piece tải đồng thời (max 10 tasks) để tránh tràn bộ nhớ và nghẽn băng thông.
+*   **Giảm log noise**: Chuyển các thông tin lặp lại cao (Tracker announce/scrape, Peer handshake) sang mức `DEBUG` để log hệ thống sạch và dễ theo dõi hơn.
+*   **Tối ưu hóa Stats**: Điều chỉnh tần suất tính toán tốc độ download/upload để giảm tải cho CPU.
+
+### 4. Giao diện Web (Web UI)
+*   **Cơ chế cập nhật**: 
+    *   Thử nghiệm chuyển đổi từ Polling sang SSE (Server-Sent Events) để cập nhật real-time.
+    *   Sau đó tối ưu lại cơ chế Polling (2000ms) để đảm bảo độ tin cậy và đơn giản hóa backend.
+*   **Dashboard hiện đại**: Thiết kế giao diện Glassmorphism với thanh tiến độ, thông tin chi tiết về Peer, Tracker và danh sách file cụ thể.
+*   **Tính năng bổ sung**:
+    *   Hỗ trợ Upload file `.torrent`.
+    *   Hiển thị thông báo (Toast) khi hoàn thành tải file.
+    *   Hiển thị thông tin chi tiết (ETA, Ratio, Client info).
+
+### 5. Sửa lỗi & Bảo mật
+*   **Sửa lỗi Race Condition**: Sử dụng cơ chế ghi file an toàn và quản lý trạng thái torrent tập trung.
+*   **Xử lý lỗi Tracker**: Cải thiện `TrackerFactory` để xử lý tốt hơn các phản hồi lỗi từ tracker UDP và HTTP.
+*   **Dọn dẹp mã nguồn**: Loại bỏ các phương thức trùng lặp ([add_peer], [listen_forever] thừa) giúp codebase gọn gàng và dễ bảo trì.
