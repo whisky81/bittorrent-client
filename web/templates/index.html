@@ -116,6 +116,69 @@
         .gen-item{padding:4px 12px 4px 0;display:flex;gap:6px}
         .gen-lbl{color:var(--text-muted);font-size:11.5px;min-width:80px}
         .gen-val{color:var(--text);font-size:11.5px;font-family:'IBM Plex Mono',monospace}
+
+        /* ── Save Dir: clickable link style ── */
+        .save-dir-link {
+            color: var(--accent);
+            font-size: 11px;
+            word-break: break-all;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            transition: background .12s, border-color .12s;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        .save-dir-link:hover {
+            background: var(--accent-dim);
+            border-color: rgba(10,132,255,.3);
+        }
+        .save-dir-link:active {
+            background: rgba(10,132,255,.25);
+        }
+        .save-dir-link .folder-icon {
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .save-dir-link .open-icon {
+            font-size: 10px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity .12s;
+        }
+        .save-dir-link:hover .open-icon {
+            opacity: 1;
+        }
+        .save-dir-tooltip {
+            position: relative;
+        }
+        .save-dir-tooltip::after {
+            content: 'Click to open in file manager';
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 0;
+            background: var(--bg3);
+            border: 1px solid var(--border-light);
+            color: var(--text-dim);
+            font-size: 10.5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .15s;
+            z-index: 100;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+        .save-dir-tooltip:hover::after {
+            opacity: 1;
+        }
+
         .dtable{width:100%;border-collapse:collapse;font-size:12px}
         .dtable th{background:var(--bg2);color:var(--text-muted);font-weight:500;font-size:11px;
                    padding:4px 10px;text-align:left;border-bottom:1px solid var(--border);
@@ -213,6 +276,25 @@
         .toast-body{font-size:12px;color:var(--text-dim);display:flex;flex-direction:column;gap:4px}
         .toast-path{font-family:'IBM Plex Mono',monospace;font-size:10.5px;
                     color:var(--accent);word-break:break-all}
+        .toast-path-link {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            transition: background .12s, border-color .12s;
+            text-decoration: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10.5px;
+            color: var(--accent);
+            word-break: break-all;
+        }
+        .toast-path-link:hover {
+            background: var(--accent-dim);
+            border-color: rgba(10,132,255,.3);
+        }
         .toast-files{max-height:60px;overflow-y:auto}
         .toast-close{margin-left:auto;background:none;border:none;color:var(--text-muted);
                      cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 8px}
@@ -221,6 +303,16 @@
         .toast-progress-fill{height:100%;background:var(--green);
                               animation:toastTimer 5s linear forwards}
         @keyframes toastTimer{from{width:100%}to{width:0%}}
+
+        /* ── Open-folder feedback ── */
+        .folder-opening {
+            animation: folderPulse 0.3s ease;
+        }
+        @keyframes folderPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
 
         /* ── Scrollbar ── */
         ::-webkit-scrollbar{width:6px;height:6px}
@@ -237,6 +329,7 @@
 
 <div id="dz"><div>📂</div><div>Drop .torrent file to add</div></div>
 <div id="ctx">
+    <div class="ctx-i" onclick="ctxOpenFolder()">📁 Open Save Folder</div>
     <div class="ctx-i" onclick="ctxCopy()">📋 Copy Info Hash</div>
     <div class="ctx-sep"></div>
     <div class="ctx-i d" onclick="ctxDelete()">🗑 Remove</div>
@@ -248,6 +341,8 @@
     <button class="tb-btn" onclick="openStep1()"><span class="icon">➕</span><span>Add</span></button>
     <div class="tb-sep"></div>
     <button class="tb-btn" onclick="deleteSelected()"><span class="icon">🗑</span><span>Remove</span></button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="openSelectedFolder()"><span class="icon">📁</span><span>Open</span></button>
     <div class="tb-sep"></div>
     <button class="tb-btn" onclick="fetchTorrents()"><span class="icon">🔄</span><span>Refresh</span></button>
     <input type="text" id="tb-search" placeholder="Filter torrents…" oninput="filterTable(this.value)">
@@ -372,6 +467,38 @@ let sortKey = 'name', sortAsc = true, detTab = 'general';
 let ctxHash = null, selFile = null;
 let pendingHash = null, pendingFiles = [];
 
+// ── Folder opener ─────────────────────────────────────────────────────────────
+/**
+ * Opens a folder in the native file manager via the backend API.
+ * The backend handles platform differences (Windows/macOS/Linux).
+ * @param {string} path - Absolute path to the folder
+ * @param {HTMLElement|null} triggerEl - Optional element to animate on click
+ */
+async function openFolder(path, triggerEl = null) {
+    if (!path) return;
+
+    // Visual feedback on the trigger element
+    if (triggerEl) {
+        triggerEl.classList.add('folder-opening');
+        setTimeout(() => triggerEl.classList.remove('folder-opening'), 300);
+    }
+
+    try {
+        const r = await fetch('/api/open-folder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path })
+        });
+        const d = await r.json();
+        if (!d.success) {
+            // Show a non-intrusive error toast
+            showErrorToast(`Could not open folder: ${d.error || 'Unknown error'}`);
+        }
+    } catch (e) {
+        showErrorToast('Connection error while opening folder');
+    }
+}
+
 // ── Fetch ────────────────────────────────────────────────────────────────────
 async function fetchTorrents() {
     try {
@@ -406,7 +533,6 @@ function filtered() {
 }
 
 function renderAll() {
-    // counts
     document.getElementById('cnt-all').textContent = torrents.length;
     document.getElementById('cnt-dl').textContent = torrents.filter(t => t.status==='Downloading').length;
     document.getElementById('cnt-seed').textContent = torrents.filter(t => t.status==='Seeding').length;
@@ -456,10 +582,33 @@ function renderStatusBar() {
     document.getElementById('sb-peers').textContent = torrents.reduce((s,t)=>s+t.peers_count,0);
 }
 
+/**
+ * Build a clickable save-dir link that opens the folder in the native file manager.
+ * The link is rendered as a styled anchor-like element (not a real <a> since
+ * we need to POST to the backend rather than navigate).
+ */
+function buildSaveDirLink(savePath) {
+    if (!savePath) return '<span style="color:var(--text-muted)">—</span>';
+    // Escape HTML special chars in the path
+    const escaped = savePath.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    // Store path as data attribute to avoid JS injection via path strings
+    return `<span class="save-dir-link save-dir-tooltip"
+                  onclick="openFolder(this.dataset.path, this)"
+                  data-path="${escaped}"
+                  title="${escaped}">
+                <span class="folder-icon">📁</span>
+                <span style="overflow:hidden;text-overflow:ellipsis;max-width:380px;display:inline-block;vertical-align:middle">${escaped}</span>
+                <span class="open-icon">↗</span>
+            </span>`;
+}
+
 function renderDetail() {
     const t = torrents.find(x => x.info_hash===selHash);
     const dc = document.getElementById('det-body');
-    if (!t) { dc.innerHTML='<div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">Select a torrent to see details</div>'; return; }
+    if (!t) {
+        dc.innerHTML='<div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">Select a torrent to see details</div>';
+        return;
+    }
 
     if (detTab==='general') {
         dc.innerHTML = `<div class="gen-grid">
@@ -475,8 +624,10 @@ function renderDetail() {
             <div class="gen-item"><span class="gen-lbl">Peers</span><span class="gen-val">${t.peers_count}</span></div>
             <div class="gen-item"><span class="gen-lbl">Files</span><span class="gen-val">${t.num_files}</span></div>
             <div class="gen-item"><span class="gen-lbl">Hash</span><span class="gen-val" style="font-size:10px;color:var(--text-muted)">${t.info_hash.substring(0,24)}…</span></div>
-            <div class="gen-item" style="grid-column:1/-1"><span class="gen-lbl">Save Dir</span>
-                <span class="gen-val" style="font-size:11px;color:var(--accent);word-break:break-all">${t.save_dir||'—'}</span></div>
+            <div class="gen-item" style="grid-column:1/-1;align-items:center">
+                <span class="gen-lbl">Save Dir</span>
+                <span style="flex:1">${buildSaveDirLink(t.save_dir)}</span>
+            </div>
         </div>`;
     } else if (detTab==='trackers') {
         const rows = t.details.trackers.length
@@ -548,6 +699,12 @@ function switchTab(t) {
     renderDetail();
 }
 
+/** Open the save folder of the currently selected torrent (toolbar button). */
+function openSelectedFolder() {
+    const t = torrents.find(x => x.info_hash === selHash);
+    if (t && t.save_dir) openFolder(t.save_dir);
+}
+
 // ── Context menu ─────────────────────────────────────────────────────────────
 function showCtx(e,hash) {
     e.preventDefault(); ctxHash=hash;
@@ -556,7 +713,15 @@ function showCtx(e,hash) {
     m.style.left=Math.min(e.clientX,window.innerWidth-170)+'px';
     m.style.top=Math.min(e.clientY,window.innerHeight-100)+'px';
 }
-function ctxCopy() { document.getElementById('ctx').style.display='none'; if(ctxHash) navigator.clipboard.writeText(ctxHash); }
+function ctxCopy() {
+    document.getElementById('ctx').style.display='none';
+    if(ctxHash) navigator.clipboard.writeText(ctxHash);
+}
+function ctxOpenFolder() {
+    document.getElementById('ctx').style.display='none';
+    const t = torrents.find(x => x.info_hash === ctxHash);
+    if (t && t.save_dir) openFolder(t.save_dir);
+}
 function ctxDelete() { document.getElementById('ctx').style.display='none'; if(ctxHash) deleteTorrent(ctxHash); }
 document.addEventListener('click',()=>document.getElementById('ctx').style.display='none');
 
@@ -642,7 +807,6 @@ function updateSelCountLabel() {
     const total=pendingFiles.length;
     const sel=pendingFiles.filter(f=>{ const cb=document.getElementById(`fc-${f.index}`); return cb&&cb.checked; }).length;
     document.getElementById('sel-count-lbl').textContent=`${sel} / ${total} selected`;
-    // Keep "select all" checkbox in sync
     document.getElementById('chk-all').checked=(sel===total);
     document.getElementById('chk-all').indeterminate=(sel>0&&sel<total);
 }
@@ -673,6 +837,18 @@ function showToast(notif) {
     const wrap=document.getElementById('toast-wrap');
     const el=document.createElement('div');
     el.className='toast';
+
+    // Build path link: clicking it opens the folder in native file manager
+    const pathEscaped = (notif.save_dir||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const pathLink = notif.save_dir
+        ? `<span class="toast-path-link"
+                  onclick="openFolder(this.dataset.path, this)"
+                  data-path="${pathEscaped}"
+                  title="Click to open in file manager">
+               📁 ${pathEscaped} <span style="font-size:10px;opacity:.7">↗</span>
+           </span>`
+        : `<span style="color:var(--text-muted)">—</span>`;
+
     el.innerHTML=`
         <div class="toast-header">
             <span class="toast-icon">✅</span>
@@ -683,11 +859,28 @@ function showToast(notif) {
             <strong style="color:var(--text)">${notif.name}</strong>
             <div class="toast-files">${(notif.files||[]).map(f=>`<div>• ${f}</div>`).join('')}</div>
             <div style="margin-top:4px">📁 Saved to:</div>
-            <div class="toast-path">${notif.save_dir}</div>
+            ${pathLink}
         </div>
         <div class="toast-progress"><div class="toast-progress-fill"></div></div>`;
     wrap.appendChild(el);
     setTimeout(()=>dismissToast(el), 5500);
+}
+
+function showErrorToast(message) {
+    const wrap=document.getElementById('toast-wrap');
+    const el=document.createElement('div');
+    el.className='toast';
+    el.style.borderColor='rgba(255,69,58,.3)';
+    el.innerHTML=`
+        <div class="toast-header" style="color:var(--red)">
+            <span class="toast-icon">⚠️</span>
+            <span>Error</span>
+            <button class="toast-close" onclick="dismissToast(this.parentElement.parentElement)">✕</button>
+        </div>
+        <div class="toast-body">${message}</div>
+        <div class="toast-progress"><div class="toast-progress-fill" style="background:var(--red)"></div></div>`;
+    wrap.appendChild(el);
+    setTimeout(()=>dismissToast(el), 4000);
 }
 
 function dismissToast(el) {
@@ -724,6 +917,8 @@ document.addEventListener('mouseup',()=>{ if(resizing){ resizing=false; document
 document.addEventListener('keydown',e=>{
     if(e.key==='Escape'){ closeStep1(); document.getElementById('mo2').classList.remove('open'); }
     if(e.key==='Delete'&&selHash&&document.activeElement===document.body) deleteSelected();
+    // Ctrl/Cmd+Enter: open folder of selected torrent
+    if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&selHash) openSelectedFolder();
 });
 document.getElementById('mo1').addEventListener('click',e=>{ if(e.target===document.getElementById('mo1')) closeStep1(); });
 document.getElementById('mo2').addEventListener('click',e=>{ if(e.target===document.getElementById('mo2')) document.getElementById('mo2').classList.remove('open'); });

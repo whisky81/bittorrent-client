@@ -2,6 +2,9 @@ import asyncio
 import threading
 import time
 import sys
+import subprocess
+import platform
+import os
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -16,15 +19,13 @@ download_manager = DownloadManager()
 
 # ── Global state ────────────────────────────────────────────────────────────
 
-# Torrents that have been parsed but not yet started (waiting for user to
-# select files in the UI).
+# Torrents that have been parsed but not yet started
 pending_torrents: dict[str, dict] = {}
-# key → {torrent: Torrent, save_path: Path}
 
 # Active torrents being downloaded / seeded.
 active_torrents: dict[str, Torrent] = {}
 
-# Speed tracking: info_hash → {last_dl, last_ul, dl_speed, ul_speed}
+# Speed tracking: info_hash → {last_dl, last_ul, dl_speed, ul_speed, timestamp}
 torrent_stats: dict[str, dict] = {}
 
 # File paths of .torrent files on disk: info_hash → Path
@@ -34,11 +35,34 @@ torrent_file_paths: dict[str, Path] = {}
 torrent_selected_files: dict[str, list[int]] = {}
 
 # Completion notifications waiting to be shown in the UI.
-# Each entry: {type, info_hash, name, files, save_dir, timestamp}
 pending_notifications: list[dict] = []
 
 # Dedicated asyncio event-loop running in a background thread
 torrent_loop = asyncio.new_event_loop()
+
+# Dynamic port allocation tracker to avoid conflicts
+_used_ports: set[int] = set()
+
+
+def _get_free_port(start: int = 6881, end: int = 6889) -> int:
+    """Get a free port in the BitTorrent standard range."""
+    import socket
+    for port in range(start, end + 1):
+        if port in _used_ports:
+            continue
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(("", port))
+                _used_ports.add(port)
+                return port
+            except OSError:
+                continue
+    # Fallback to any available port
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("", 0))
+        port = s.getsockname()[1]
+        _used_ports.add(port)
+        return port
 
 
 def run_async_loop(loop: asyncio.AbstractEventLoop):
@@ -49,30 +73,83 @@ def run_async_loop(loop: asyncio.AbstractEventLoop):
 threading.Thread(target=run_async_loop, args=(torrent_loop,), daemon=True).start()
 
 
-# ── Background speed tracking ────────────────────────────────────────────────
+# ── Background speed tracking (optimized: 1s interval) ──────────────────────
 
 async def update_stats():
+    """Update download/upload speeds every second using delta calculation."""
     while True:
         try:
+            now = time.time()
             for info_hash, torrent in list(active_torrents.items()):
                 if info_hash not in torrent_stats:
                     torrent_stats[info_hash] = {
                         "last_dl": 0, "last_ul": 0,
                         "dl_speed": 0.0, "ul_speed": 0.0,
+                        "last_time": now,
                     }
                 curr_dl = torrent.torrent_info.get("downloaded", 0)
                 curr_ul = torrent.torrent_info.get("uploaded", 0)
                 s = torrent_stats[info_hash]
-                s["dl_speed"] = max(0.0, float(curr_dl - s["last_dl"]))
-                s["ul_speed"] = max(0.0, float(curr_ul - s["last_ul"]))
+                elapsed = now - s.get("last_time", now)
+                if elapsed > 0:
+                    s["dl_speed"] = max(0.0, (curr_dl - s["last_dl"]) / elapsed)
+                    s["ul_speed"] = max(0.0, (curr_ul - s["last_ul"]) / elapsed)
                 s["last_dl"] = curr_dl
                 s["last_ul"] = curr_ul
+                s["last_time"] = now
         except Exception:
             pass
         await asyncio.sleep(1)
 
 
 asyncio.run_coroutine_threadsafe(update_stats(), torrent_loop)
+
+
+# ── Platform-independent folder opener ───────────────────────────────────────
+
+def open_folder(path: str) -> tuple[bool, str]:
+    """
+    Open a folder in the system file manager.
+    Returns (success, error_message).
+    Works on Windows, macOS, and Linux.
+    """
+    folder = Path(path)
+    if not folder.exists():
+        # Try to create it if it doesn't exist yet
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            return False, f"Directory does not exist and could not be created: {e}"
+
+    system = platform.system()
+    try:
+        if system == "Windows":
+            # Use os.startfile which is Windows-native
+            os.startfile(str(folder))
+        elif system == "Darwin":  # macOS
+            subprocess.Popen(["open", str(folder)])
+        else:
+            # Linux: try common file managers in order
+            file_managers = [
+                "xdg-open",       # Standard freedesktop.org
+                "nautilus",       # GNOME
+                "dolphin",        # KDE
+                "thunar",         # XFCE
+                "nemo",           # Cinnamon
+                "pcmanfm",        # LXDE
+                "ranger",         # Terminal-based
+            ]
+            for fm in file_managers:
+                try:
+                    subprocess.Popen([fm, str(folder)])
+                    break
+                except FileNotFoundError:
+                    continue
+            else:
+                return False, "No compatible file manager found on this system"
+        return True, ""
+    except Exception as e:
+        return False, str(e)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -98,7 +175,7 @@ def get_tracker_url(tracker) -> str:
 def _selected_progress(torrent: Torrent, info_hash: str) -> tuple[float, float, float]:
     """
     Returns (progress_pct, downloaded_bytes, total_bytes) restricted to the
-    files the user selected.  Falls back to all files if nothing is selected.
+    files the user selected.
     """
     if not torrent.files:
         return 0.0, 0.0, 1.0
@@ -127,7 +204,6 @@ def get_torrents():
     for info_hash, torrent in active_torrents.items():
         progress, dl_bytes, total_bytes = _selected_progress(torrent, info_hash)
 
-        # Check if truly done (all selected files fully written)
         selected = torrent_selected_files.get(info_hash) or list(range(len(torrent.files or [])))
         all_done = download_manager.is_already_downloaded(
             info_hash, torrent.name,
@@ -139,7 +215,6 @@ def get_torrents():
         active_peers_list = [p for p in torrent.peers if getattr(p, "active", False)]
         stats = torrent_stats.get(info_hash, {"dl_speed": 0.0, "ul_speed": 0.0})
 
-        # Status
         if progress >= 100.0:
             status = "Seeding"
         elif stats["dl_speed"] > 0:
@@ -147,16 +222,14 @@ def get_torrents():
         else:
             status = "Stalled"
 
-        # ETA
         eta = ""
         if stats["dl_speed"] > 0 and progress < 100:
             remaining = total_bytes - dl_bytes
-            secs = int(remaining / stats["dl_speed"])
+            secs = int(remaining / max(stats["dl_speed"], 1))
             eta = f"{secs // 3600}h {(secs % 3600) // 60}m" if secs >= 3600 else f"{secs // 60}m {secs % 60}s"
 
         ratio = round(torrent.torrent_info.get("uploaded", 0) / max(dl_bytes, 1), 3)
 
-        # Peer details (use .pieces BitArray, not .bitfield)
         peer_details = []
         for p in active_peers_list:
             peer_progress = 0
@@ -173,7 +246,6 @@ def get_torrents():
                 "choked": getattr(p, "choking_me", True),
             })
 
-        # Tracker details
         tracker_details = []
         for tr in torrent.trackers:
             resp = getattr(tr, "announce_response", {}) or {}
@@ -185,7 +257,6 @@ def get_torrents():
                 "interval": resp.get("interval", 0),
             })
 
-        # File details (selected files only)
         file_details = []
         if torrent.files:
             for i, f in enumerate(torrent.files):
@@ -198,6 +269,8 @@ def get_torrents():
                     "progress": f.get_download_progress() if is_sel else 0.0,
                     "selected": is_sel,
                 })
+
+        save_dir_str = str(torrent.save_dir) if hasattr(torrent, "save_dir") else ""
 
         data.append({
             "info_hash": info_hash,
@@ -217,7 +290,7 @@ def get_torrents():
             "eta": eta or ("∞" if progress < 100 else ""),
             "ratio": ratio,
             "num_files": len(torrent.files) if torrent.files else 0,
-            "save_dir": str(torrent.save_dir),
+            "save_dir": save_dir_str,
             "details": {
                 "peers": peer_details,
                 "trackers": tracker_details,
@@ -235,6 +308,26 @@ def get_notifications():
     return jsonify(notifs)
 
 
+@app.route("/api/open-folder", methods=["POST"])
+def api_open_folder():
+    """
+    Open a folder in the native file manager.
+    Body JSON: { "path": "/absolute/path/to/folder" }
+    Works cross-platform: Windows (Explorer), macOS (Finder), Linux (xdg-open + fallbacks).
+    """
+    body = request.get_json(silent=True) or {}
+    path = body.get("path", "").strip()
+
+    if not path:
+        return jsonify({"error": "Missing 'path' field"}), 400
+
+    success, error = open_folder(path)
+    if success:
+        return jsonify({"success": True})
+    else:
+        return jsonify({"error": error}), 500
+
+
 # ── Upload flow (two-step) ────────────────────────────────────────────────────
 
 UPLOAD_FOLDER = Path.cwd() / "downloads" / "torrents"
@@ -244,9 +337,8 @@ UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 @app.route("/api/upload", methods=["POST"])
 def upload_torrent():
     """
-    Step 1 of 2.
-    Parse the .torrent file and return its file list so the UI can show a
-    file-selection dialog.  The torrent is NOT started yet.
+    Step 1 of 2: Parse the .torrent file and return file list for UI selection.
+    The torrent is NOT started yet.
     """
     if "file" not in request.files:
         return jsonify({"error": "No file part"}), 400
@@ -267,7 +359,6 @@ def upload_torrent():
         if info_hash in active_torrents:
             return jsonify({"error": "Torrent already active"}), 400
 
-        # Store as pending until the user confirms file selection
         pending_torrents[info_hash] = {
             "torrent": torrent,
             "save_path": save_path,
@@ -297,8 +388,7 @@ def upload_torrent():
 @app.route("/api/start", methods=["POST"])
 def start_torrent():
     """
-    Step 2 of 2.
-    Start the torrent with the file indices the user selected.
+    Step 2 of 2: Start the torrent with the file indices the user selected.
     Body JSON: { "info_hash": "...", "selected_indices": [0, 1, ...] }
     """
     body = request.get_json(silent=True) or {}
@@ -317,7 +407,6 @@ def start_torrent():
     torrent: Torrent = entry["torrent"]
     save_path: Path = entry["save_path"]
 
-    # Default: download all files if nothing selected
     if not selected and torrent.files:
         selected = list(range(len(torrent.files)))
 
@@ -348,11 +437,9 @@ async def _start_torrent_task(torrent: Torrent, info_hash: str, file_indices: li
             ):
                 await torrent.download_files(valid)
 
-                # Mark all selected files as downloaded
                 torrent_fp = torrent_file_paths.get(info_hash, Path(""))
                 download_manager.mark_downloaded(info_hash, torrent.save_dir, torrent_fp)
 
-            # Push a completion notification for the UI
             pending_notifications.append({
                 "type": "download_complete",
                 "info_hash": info_hash,
@@ -416,3 +503,4 @@ def delete_torrent(info_hash):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+    print("Running on http://127.0.0.1:5000")
