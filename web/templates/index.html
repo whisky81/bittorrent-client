@@ -21,8 +21,6 @@
         body{background:var(--bg0);color:var(--text);font-family:'IBM Plex Sans',sans-serif;
              font-size:13px;height:100vh;display:flex;flex-direction:column;
              overflow:hidden;user-select:none}
-
-        /* ── Toolbar ── */
         #toolbar{height:var(--tb);background:var(--bg1);border-bottom:1px solid var(--border);
                  display:flex;align-items:center;padding:0 8px;gap:2px;flex-shrink:0}
         .tb-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -40,11 +38,7 @@
                    background-repeat:no-repeat;background-position:8px center}
         #tb-search:focus{border-color:var(--accent)}
         #tb-search::placeholder{color:var(--text-muted)}
-
-        /* ── Layout ── */
         #main{display:flex;flex:1;overflow:hidden}
-
-        /* ── Sidebar ── */
         #sidebar{width:var(--sb-w);background:var(--bg1);border-right:1px solid var(--border);
                  flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
         .sb-sect{padding:10px 0 4px}
@@ -57,11 +51,12 @@
         .sb-icon{font-size:13px;width:16px;text-align:center}
         .sb-cnt{margin-left:auto;font-size:10.5px;color:var(--text-muted);
                 font-family:'IBM Plex Mono',monospace}
-
-        /* ── Content ── */
+        /* SSE status indicator */
+        #sse-status{margin-left:8px;font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+        #sse-dot{width:6px;height:6px;border-radius:50%;background:var(--text-muted);transition:background .3s}
+        #sse-dot.connected{background:var(--green)}
+        #sse-dot.error{background:var(--red)}
         #content{flex:1;display:flex;flex-direction:column;overflow:hidden}
-
-        /* ── Table ── */
         #table-wrap{flex:1;overflow:auto;min-height:0}
         #tt{width:100%;border-collapse:collapse;font-size:12.5px}
         #tt thead{position:sticky;top:0;z-index:10}
@@ -83,7 +78,6 @@
         .cpe{width:55px;text-align:right} .cdl{width:82px;text-align:right}
         .cul{width:82px;text-align:right} .ceta{width:75px;text-align:right}
         .crt{width:55px;text-align:right}
-
         .bar{position:relative;background:var(--track);border-radius:2px;height:14px;overflow:hidden}
         .bar-fill{position:absolute;top:0;left:0;height:100%;border-radius:2px;transition:width .5s ease}
         .bar-fill.dl{background:var(--dl)} .bar-fill.seed{background:var(--seed)}
@@ -98,12 +92,9 @@
         .badge.stalled{background:rgba(255,159,10,.12);color:var(--orange)}
         .badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
         td.mono{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim)}
-
         #empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
                padding:60px 20px;color:var(--text-muted);gap:12px}
         #empty .ei{font-size:48px}
-
-        /* ── Detail Panel ── */
         #det{height:var(--det-h);background:var(--bg1);border-top:1px solid var(--border);
              flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
         #det-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);
@@ -116,69 +107,20 @@
         .gen-item{padding:4px 12px 4px 0;display:flex;gap:6px}
         .gen-lbl{color:var(--text-muted);font-size:11.5px;min-width:80px}
         .gen-val{color:var(--text);font-size:11.5px;font-family:'IBM Plex Mono',monospace}
-
-        /* ── Save Dir: clickable link style ── */
-        .save-dir-link {
-            color: var(--accent);
-            font-size: 11px;
-            word-break: break-all;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            transition: background .12s, border-color .12s;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-        .save-dir-link:hover {
-            background: var(--accent-dim);
-            border-color: rgba(10,132,255,.3);
-        }
-        .save-dir-link:active {
-            background: rgba(10,132,255,.25);
-        }
-        .save-dir-link .folder-icon {
-            font-size: 12px;
-            flex-shrink: 0;
-        }
-        .save-dir-link .open-icon {
-            font-size: 10px;
-            color: var(--text-muted);
-            flex-shrink: 0;
-            opacity: 0;
-            transition: opacity .12s;
-        }
-        .save-dir-link:hover .open-icon {
-            opacity: 1;
-        }
-        .save-dir-tooltip {
-            position: relative;
-        }
-        .save-dir-tooltip::after {
-            content: 'Click to open in file manager';
-            position: absolute;
-            bottom: calc(100% + 6px);
-            left: 0;
-            background: var(--bg3);
-            border: 1px solid var(--border-light);
-            color: var(--text-dim);
-            font-size: 10.5px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            white-space: nowrap;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity .15s;
-            z-index: 100;
-            font-family: 'IBM Plex Sans', sans-serif;
-        }
-        .save-dir-tooltip:hover::after {
-            opacity: 1;
-        }
-
+        .save-dir-link{color:var(--accent);font-size:11px;word-break:break-all;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;padding:2px 6px;
+            border-radius:4px;border:1px solid transparent;transition:background .12s,border-color .12s;
+            font-family:'IBM Plex Mono',monospace}
+        .save-dir-link:hover{background:var(--accent-dim);border-color:rgba(10,132,255,.3)}
+        .save-dir-link:active{background:rgba(10,132,255,.25)}
+        .save-dir-link .open-icon{font-size:10px;color:var(--text-muted);flex-shrink:0;opacity:0;transition:opacity .12s}
+        .save-dir-link:hover .open-icon{opacity:1}
+        .save-dir-tooltip{position:relative}
+        .save-dir-tooltip::after{content:'Click to open in file manager';position:absolute;
+            bottom:calc(100% + 6px);left:0;background:var(--bg3);border:1px solid var(--border-light);
+            color:var(--text-dim);font-size:10.5px;padding:4px 8px;border-radius:4px;white-space:nowrap;
+            pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;font-family:'IBM Plex Sans',sans-serif}
+        .save-dir-tooltip:hover::after{opacity:1}
         .dtable{width:100%;border-collapse:collapse;font-size:12px}
         .dtable th{background:var(--bg2);color:var(--text-muted);font-weight:500;font-size:11px;
                    padding:4px 10px;text-align:left;border-bottom:1px solid var(--border);
@@ -186,26 +128,18 @@
         .dtable td{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text-dim)}
         .dtable tr:hover td{background:var(--bg-hover)}
         .ok{color:var(--green)!important} .fail{color:var(--red)!important}
-
-        /* ── Status Bar ── */
         #statusbar{height:var(--sb);background:var(--bg1);border-top:1px solid var(--border);
                    display:flex;align-items:center;padding:0 12px;gap:20px;
                    font-size:11.5px;color:var(--text-muted);flex-shrink:0}
         .sb-i{display:flex;align-items:center;gap:5px}
         .sb-v{color:var(--text-dim);font-family:'IBM Plex Mono',monospace}
-
-        /* ── Resize ── */
         #rh{height:4px;background:transparent;cursor:ns-resize;flex-shrink:0;transition:background .15s}
         #rh:hover,#rh.drag{background:var(--accent)}
-
-        /* ── Drag overlay ── */
         #dz{position:fixed;inset:0;background:rgba(10,132,255,.08);border:2px dashed var(--accent);
             border-radius:8px;display:none;align-items:center;justify-content:center;
             z-index:200;font-size:20px;color:var(--accent);font-weight:500;gap:12px;
             flex-direction:column;pointer-events:none}
         #dz.on{display:flex}
-
-        /* ── Context Menu ── */
         #ctx{position:fixed;background:var(--bg2);border:1px solid var(--border-light);
              border-radius:7px;padding:4px;z-index:300;display:none;
              min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
@@ -214,8 +148,6 @@
         .ctx-i:hover{background:var(--bg3);color:var(--text)}
         .ctx-i.d{color:var(--red)} .ctx-i.d:hover{background:rgba(255,69,58,.1)}
         .ctx-sep{height:1px;background:var(--border);margin:3px 0}
-
-        /* ── Modal base ── */
         .mo{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;
             align-items:center;justify-content:center;z-index:100;
             backdrop-filter:blur(3px)}
@@ -225,8 +157,6 @@
             display:flex;flex-direction:column;gap:16px}
         .mc h2{font-size:15px;font-weight:600;color:var(--text)}
         .mc-sub{font-size:12px;color:var(--text-muted)}
-
-        /* Step 1: drop area */
         .drop-area{border:1.5px dashed var(--border-light);border-radius:8px;padding:28px;
                    text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
         .drop-area:hover,.drop-area.dv{border-color:var(--accent);background:var(--accent-dim)}
@@ -237,8 +167,6 @@
         .sel-info{background:var(--bg3);border-radius:6px;padding:8px 12px;
                   font-size:12px;color:var(--text-dim);display:none;align-items:center;gap:8px}
         .sel-info.show{display:flex}
-
-        /* Step 2: file list */
         #file-list{max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
         .fl-item{display:flex;align-items:center;gap:10px;padding:7px 10px;
                  border-radius:6px;cursor:pointer;transition:background .1s}
@@ -252,7 +180,6 @@
                     padding:0 0 8px 0;border-bottom:1px solid var(--border)}
         .fl-sel-all label{font-size:12px;color:var(--text-dim);cursor:pointer;
                           display:flex;align-items:center;gap:6px}
-
         .ma{display:flex;justify-content:flex-end;gap:8px}
         .btn{padding:6px 16px;border-radius:6px;border:none;cursor:pointer;
              font-family:inherit;font-size:12.5px;font-weight:500;transition:background .1s}
@@ -261,8 +188,6 @@
         .btn-p:disabled{background:var(--bg3);color:var(--text-muted);cursor:default}
         .btn-g{background:transparent;color:var(--text-dim)}
         .btn-g:hover{background:var(--bg3)}
-
-        /* ── Toast notifications ── */
         #toast-wrap{position:fixed;bottom:36px;right:16px;z-index:500;
                     display:flex;flex-direction:column;gap:8px;align-items:flex-end}
         .toast{background:var(--bg2);border:1px solid var(--border-light);border-radius:10px;
@@ -274,27 +199,11 @@
         .toast-header{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
         .toast-icon{font-size:18px}
         .toast-body{font-size:12px;color:var(--text-dim);display:flex;flex-direction:column;gap:4px}
-        .toast-path{font-family:'IBM Plex Mono',monospace;font-size:10.5px;
-                    color:var(--accent);word-break:break-all}
-        .toast-path-link {
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 6px;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            transition: background .12s, border-color .12s;
-            text-decoration: none;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 10.5px;
-            color: var(--accent);
-            word-break: break-all;
-        }
-        .toast-path-link:hover {
-            background: var(--accent-dim);
-            border-color: rgba(10,132,255,.3);
-        }
+        .toast-path-link{cursor:pointer;display:inline-flex;align-items:center;gap:4px;
+            padding:3px 6px;border-radius:4px;border:1px solid transparent;
+            transition:background .12s,border-color .12s;text-decoration:none;
+            font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--accent);word-break:break-all}
+        .toast-path-link:hover{background:var(--accent-dim);border-color:rgba(10,132,255,.3)}
         .toast-files{max-height:60px;overflow-y:auto}
         .toast-close{margin-left:auto;background:none;border:none;color:var(--text-muted);
                      cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 8px}
@@ -303,25 +212,13 @@
         .toast-progress-fill{height:100%;background:var(--green);
                               animation:toastTimer 5s linear forwards}
         @keyframes toastTimer{from{width:100%}to{width:0%}}
-
-        /* ── Open-folder feedback ── */
-        .folder-opening {
-            animation: folderPulse 0.3s ease;
-        }
-        @keyframes folderPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
-        }
-
-        /* ── Scrollbar ── */
+        .folder-opening{animation:folderPulse 0.3s ease}
+        @keyframes folderPulse{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
         ::-webkit-scrollbar{width:6px;height:6px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
         ::-webkit-scrollbar-thumb:hover{background:var(--border-light)}
         .no-sel{user-select:none}
-
-        /* File checkbox in file-list */
         #file-list input[type=checkbox]{pointer-events:none}
     </style>
 </head>
@@ -336,7 +233,6 @@
 </div>
 <div id="toast-wrap"></div>
 
-<!-- Toolbar -->
 <div id="toolbar">
     <button class="tb-btn" onclick="openStep1()"><span class="icon">➕</span><span>Add</span></button>
     <div class="tb-sep"></div>
@@ -346,9 +242,13 @@
     <div class="tb-sep"></div>
     <button class="tb-btn" onclick="fetchTorrents()"><span class="icon">🔄</span><span>Refresh</span></button>
     <input type="text" id="tb-search" placeholder="Filter torrents…" oninput="filterTable(this.value)">
+    <!-- Fix 6: SSE connection status indicator -->
+    <div id="sse-status" title="Live update connection">
+        <div id="sse-dot"></div>
+        <span id="sse-label">Connecting…</span>
+    </div>
 </div>
 
-<!-- Main -->
 <div id="main">
     <div id="sidebar">
         <div class="sb-sect">
@@ -408,7 +308,6 @@
     </div>
 </div>
 
-<!-- Status bar -->
 <div id="statusbar">
     <span class="sb-i">↓ <span class="sb-v" id="sb-dl">0 B/s</span></span>
     <span class="sb-i">↑ <span class="sb-v" id="sb-ul">0 B/s</span></span>
@@ -417,7 +316,7 @@
     <span style="margin-left:auto;font-size:11px">PyTorrent v1.0</span>
 </div>
 
-<!-- ── Modal Step 1: Choose file ── -->
+<!-- Modal Step 1 -->
 <div id="mo1" class="mo">
     <div class="mc">
         <h2>Add Torrent</h2>
@@ -440,7 +339,7 @@
     </div>
 </div>
 
-<!-- ── Modal Step 2: Select files ── -->
+<!-- Modal Step 2 -->
 <div id="mo2" class="mo">
     <div class="mc">
         <h2>Select Files to Download</h2>
@@ -467,22 +366,80 @@ let sortKey = 'name', sortAsc = true, detTab = 'general';
 let ctxHash = null, selFile = null;
 let pendingHash = null, pendingFiles = [];
 
+// ── Fix 6: SSE setup (thay thế setInterval polling) ─────────────────────────
+let _sse = null;
+let _sseRetryCount = 0;
+const _SSE_MAX_RETRY_DELAY = 30000;
+
+function setSseStatus(state) {
+    const dot = document.getElementById('sse-dot');
+    const label = document.getElementById('sse-label');
+    if (state === 'connected') {
+        dot.className = 'connected'; label.textContent = 'Live';
+    } else if (state === 'error') {
+        dot.className = 'error'; label.textContent = 'Reconnecting…';
+    } else {
+        dot.className = ''; label.textContent = 'Connecting…';
+    }
+}
+
+function initSSE() {
+    // Fallback: nếu browser không hỗ trợ EventSource → dùng polling
+    if (!window.EventSource) {
+        console.warn('SSE not supported, falling back to polling');
+        setInterval(fetchTorrents, 2000);
+        setInterval(() => fetch('/api/notifications').then(r=>r.json()).then(n=>n.forEach(showToast)), 2000);
+        return;
+    }
+
+    if (_sse) {
+        _sse.close();
+        _sse = null;
+    }
+
+    setSseStatus('connecting');
+    _sse = new EventSource('/api/stream');
+
+    _sse.onopen = function() {
+        _sseRetryCount = 0;
+        setSseStatus('connected');
+    };
+
+    _sse.onmessage = function(e) {
+        try {
+            const data = JSON.parse(e.data);
+            if (data.error) {
+                console.warn('SSE server error:', data.error);
+                return;
+            }
+            if (Array.isArray(data.torrents)) {
+                torrents = data.torrents;
+                renderAll();
+            }
+            if (Array.isArray(data.notifications) && data.notifications.length > 0) {
+                data.notifications.forEach(showToast);
+            }
+        } catch(err) {
+            console.error('SSE parse error:', err);
+        }
+    };
+
+    _sse.onerror = function() {
+        setSseStatus('error');
+        // EventSource tự reconnect, nhưng ta log để debug
+        _sseRetryCount++;
+        const delay = Math.min(1000 * Math.pow(2, _sseRetryCount), _SSE_MAX_RETRY_DELAY);
+        console.warn(`SSE error (attempt ${_sseRetryCount}), reconnecting in ${delay}ms`);
+    };
+}
+
 // ── Folder opener ─────────────────────────────────────────────────────────────
-/**
- * Opens a folder in the native file manager via the backend API.
- * The backend handles platform differences (Windows/macOS/Linux).
- * @param {string} path - Absolute path to the folder
- * @param {HTMLElement|null} triggerEl - Optional element to animate on click
- */
 async function openFolder(path, triggerEl = null) {
     if (!path) return;
-
-    // Visual feedback on the trigger element
     if (triggerEl) {
         triggerEl.classList.add('folder-opening');
         setTimeout(() => triggerEl.classList.remove('folder-opening'), 300);
     }
-
     try {
         const r = await fetch('/api/open-folder', {
             method: 'POST',
@@ -490,16 +447,13 @@ async function openFolder(path, triggerEl = null) {
             body: JSON.stringify({ path })
         });
         const d = await r.json();
-        if (!d.success) {
-            // Show a non-intrusive error toast
-            showErrorToast(`Could not open folder: ${d.error || 'Unknown error'}`);
-        }
+        if (!d.success) showErrorToast(`Could not open folder: ${d.error || 'Unknown error'}`);
     } catch (e) {
         showErrorToast('Connection error while opening folder');
     }
 }
 
-// ── Fetch ────────────────────────────────────────────────────────────────────
+// ── Fetch (giữ lại cho nút Refresh thủ công) ─────────────────────────────────
 async function fetchTorrents() {
     try {
         const r = await fetch('/api/torrents');
@@ -509,16 +463,7 @@ async function fetchTorrents() {
     } catch {}
 }
 
-async function fetchNotifications() {
-    try {
-        const r = await fetch('/api/notifications');
-        if (!r.ok) return;
-        const notifs = await r.json();
-        notifs.forEach(showToast);
-    } catch {}
-}
-
-// ── Render ───────────────────────────────────────────────────────────────────
+// ── Render ────────────────────────────────────────────────────────────────────
 function filtered() {
     return torrents
         .filter(t => activeFilter === 'all' || t.status === activeFilter)
@@ -582,21 +527,14 @@ function renderStatusBar() {
     document.getElementById('sb-peers').textContent = torrents.reduce((s,t)=>s+t.peers_count,0);
 }
 
-/**
- * Build a clickable save-dir link that opens the folder in the native file manager.
- * The link is rendered as a styled anchor-like element (not a real <a> since
- * we need to POST to the backend rather than navigate).
- */
 function buildSaveDirLink(savePath) {
     if (!savePath) return '<span style="color:var(--text-muted)">—</span>';
-    // Escape HTML special chars in the path
     const escaped = savePath.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    // Store path as data attribute to avoid JS injection via path strings
     return `<span class="save-dir-link save-dir-tooltip"
                   onclick="openFolder(this.dataset.path, this)"
                   data-path="${escaped}"
                   title="${escaped}">
-                <span class="folder-icon">📁</span>
+                <span>📁</span>
                 <span style="overflow:hidden;text-overflow:ellipsis;max-width:380px;display:inline-block;vertical-align:middle">${escaped}</span>
                 <span class="open-icon">↗</span>
             </span>`;
@@ -609,7 +547,6 @@ function renderDetail() {
         dc.innerHTML='<div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">Select a torrent to see details</div>';
         return;
     }
-
     if (detTab==='general') {
         dc.innerHTML = `<div class="gen-grid">
             <div class="gen-item"><span class="gen-lbl">Name</span><span class="gen-val">${t.name}</span></div>
@@ -679,7 +616,7 @@ function renderDetail() {
     }
 }
 
-// ── Interactions ─────────────────────────────────────────────────────────────
+// ── Interactions ──────────────────────────────────────────────────────────────
 function selectT(hash) { selHash=hash; renderTable(); renderDetail(); }
 function setFilter(f,el) {
     activeFilter=f;
@@ -698,14 +635,12 @@ function switchTab(t) {
     document.querySelectorAll('.dtab').forEach(e=>{ if(e.textContent.toLowerCase().startsWith(t)) e.classList.add('active'); });
     renderDetail();
 }
-
-/** Open the save folder of the currently selected torrent (toolbar button). */
 function openSelectedFolder() {
     const t = torrents.find(x => x.info_hash === selHash);
     if (t && t.save_dir) openFolder(t.save_dir);
 }
 
-// ── Context menu ─────────────────────────────────────────────────────────────
+// ── Context menu ──────────────────────────────────────────────────────────────
 function showCtx(e,hash) {
     e.preventDefault(); ctxHash=hash;
     const m=document.getElementById('ctx');
@@ -713,10 +648,7 @@ function showCtx(e,hash) {
     m.style.left=Math.min(e.clientX,window.innerWidth-170)+'px';
     m.style.top=Math.min(e.clientY,window.innerHeight-100)+'px';
 }
-function ctxCopy() {
-    document.getElementById('ctx').style.display='none';
-    if(ctxHash) navigator.clipboard.writeText(ctxHash);
-}
+function ctxCopy() { document.getElementById('ctx').style.display='none'; if(ctxHash) navigator.clipboard.writeText(ctxHash); }
 function ctxOpenFolder() {
     document.getElementById('ctx').style.display='none';
     const t = torrents.find(x => x.info_hash === ctxHash);
@@ -739,10 +671,7 @@ function closeStep1() {
     document.getElementById('sel-info').classList.remove('show');
     document.getElementById('btn-next').disabled=true;
 }
-function backToStep1() {
-    document.getElementById('mo2').classList.remove('open');
-    openStep1();
-}
+function backToStep1() { document.getElementById('mo2').classList.remove('open'); openStep1(); }
 
 function handleFile1(input) {
     if (input.files && input.files[0]) {
@@ -773,10 +702,8 @@ async function uploadAndNext() {
         const r=await fetch('/api/upload',{method:'POST',body:fd});
         const d=await r.json();
         if (!d.success) { alert(d.error||'Upload failed'); btn.disabled=false; btn.textContent='Next →'; return; }
-        pendingHash=d.info_hash;
-        pendingFiles=d.files||[];
-        closeStep1();
-        showStep2(d.name, d.files||[]);
+        pendingHash=d.info_hash; pendingFiles=d.files||[];
+        closeStep1(); showStep2(d.name, d.files||[]);
     } catch(e) { alert('Connection error'); btn.disabled=false; btn.textContent='Next →'; }
 }
 
@@ -794,15 +721,8 @@ function showStep2(name, files) {
     document.getElementById('mo2').classList.add('open');
 }
 
-function toggleFile(idx,el) {
-    const cb=document.getElementById(`fc-${idx}`);
-    cb.checked=!cb.checked;
-    updateSelCountLabel();
-}
-function toggleAll(checked) {
-    pendingFiles.forEach(f=>{ const cb=document.getElementById(`fc-${f.index}`); if(cb) cb.checked=checked; });
-    updateSelCountLabel();
-}
+function toggleFile(idx,el) { const cb=document.getElementById(`fc-${idx}`); cb.checked=!cb.checked; updateSelCountLabel(); }
+function toggleAll(checked) { pendingFiles.forEach(f=>{ const cb=document.getElementById(`fc-${f.index}`); if(cb) cb.checked=checked; }); updateSelCountLabel(); }
 function updateSelCountLabel() {
     const total=pendingFiles.length;
     const sel=pendingFiles.filter(f=>{ const cb=document.getElementById(`fc-${f.index}`); return cb&&cb.checked; }).length;
@@ -837,18 +757,10 @@ function showToast(notif) {
     const wrap=document.getElementById('toast-wrap');
     const el=document.createElement('div');
     el.className='toast';
-
-    // Build path link: clicking it opens the folder in native file manager
     const pathEscaped = (notif.save_dir||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const pathLink = notif.save_dir
-        ? `<span class="toast-path-link"
-                  onclick="openFolder(this.dataset.path, this)"
-                  data-path="${pathEscaped}"
-                  title="Click to open in file manager">
-               📁 ${pathEscaped} <span style="font-size:10px;opacity:.7">↗</span>
-           </span>`
+        ? `<span class="toast-path-link" onclick="openFolder(this.dataset.path,this)" data-path="${pathEscaped}" title="Click to open">📁 ${pathEscaped} <span style="font-size:10px;opacity:.7">↗</span></span>`
         : `<span style="color:var(--text-muted)">—</span>`;
-
     el.innerHTML=`
         <div class="toast-header">
             <span class="toast-icon">✅</span>
@@ -858,7 +770,7 @@ function showToast(notif) {
         <div class="toast-body">
             <strong style="color:var(--text)">${notif.name}</strong>
             <div class="toast-files">${(notif.files||[]).map(f=>`<div>• ${f}</div>`).join('')}</div>
-            <div style="margin-top:4px">📁 Saved to:</div>
+            <div style="margin-top:4px">Saved to:</div>
             ${pathLink}
         </div>
         <div class="toast-progress"><div class="toast-progress-fill"></div></div>`;
@@ -873,8 +785,7 @@ function showErrorToast(message) {
     el.style.borderColor='rgba(255,69,58,.3)';
     el.innerHTML=`
         <div class="toast-header" style="color:var(--red)">
-            <span class="toast-icon">⚠️</span>
-            <span>Error</span>
+            <span class="toast-icon">⚠️</span><span>Error</span>
             <button class="toast-close" onclick="dismissToast(this.parentElement.parentElement)">✕</button>
         </div>
         <div class="toast-body">${message}</div>
@@ -883,10 +794,7 @@ function showErrorToast(message) {
     setTimeout(()=>dismissToast(el), 4000);
 }
 
-function dismissToast(el) {
-    el.classList.add('leaving');
-    setTimeout(()=>el.remove(), 260);
-}
+function dismissToast(el) { el.classList.add('leaving'); setTimeout(()=>el.remove(), 260); }
 
 // ── Global drag-and-drop ──────────────────────────────────────────────────────
 let dragN=0;
@@ -907,7 +815,7 @@ document.addEventListener('drop',async e=>{
     }
 });
 
-// ── Resize ────────────────────────────────────────────────────────────────────
+// ── Resize ─────────────────────────────────────────────────────────────────────
 let resizing=false, ry=0, rh0=0;
 function startResize(e) { resizing=true; ry=e.clientY; rh0=document.getElementById('det').offsetHeight; document.getElementById('rh').classList.add('drag'); document.body.classList.add('no-sel'); }
 document.addEventListener('mousemove',e=>{ if(!resizing) return; const d=ry-e.clientY; document.getElementById('det').style.height=Math.max(80,Math.min(500,rh0+d))+'px'; });
@@ -917,7 +825,6 @@ document.addEventListener('mouseup',()=>{ if(resizing){ resizing=false; document
 document.addEventListener('keydown',e=>{
     if(e.key==='Escape'){ closeStep1(); document.getElementById('mo2').classList.remove('open'); }
     if(e.key==='Delete'&&selHash&&document.activeElement===document.body) deleteSelected();
-    // Ctrl/Cmd+Enter: open folder of selected torrent
     if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&selHash) openSelectedFolder();
 });
 document.getElementById('mo1').addEventListener('click',e=>{ if(e.target===document.getElementById('mo1')) closeStep1(); });
@@ -932,9 +839,10 @@ function fmtBytes(n) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-fetchTorrents();
-setInterval(fetchTorrents, 2000);
-setInterval(fetchNotifications, 2000);
+// Fix 6: Load data 1 lần ban đầu, sau đó dùng SSE để nhận cập nhật real-time.
+// KHÔNG dùng setInterval polling nữa → tiết kiệm tài nguyên, tránh tràn memory.
+fetchTorrents();   // Initial load ngay lập tức
+initSSE();         // Kết nối SSE để nhận cập nhật liên tục (1 connection thay vì polling)
 </script>
 </body>
 </html>

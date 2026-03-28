@@ -22,10 +22,12 @@ PEER_MAX_FAILS = 5
 PEER_MAX_DISCONNECTS = 10
 PEER_MAX_CHOKES = 30
 
+# Fix 3: dải port chuẩn BitTorrent
+_BITTORRENT_PORT_RANGE = range(6881, 6890)
+
 
 class Torrent:
     def __init__(self, torrent_file, save_dir: Path | str | None = None) -> None:
-        """raise OSError"""
         if isinstance(torrent_file, io.IOBase):
             bencoded_data = torrent_file.read()
         else:
@@ -33,34 +35,32 @@ class Torrent:
                 bencoded_data = f.read()
 
         metainfo = bencode_wrapper.bdecode(bencoded_data)
-        announce = metainfo.get("announce", None)
-        announce_list = metainfo.get("announce-list", None)
-        self.name = metainfo["info"]["name"]
-        self.has_multiple_files = "files" in metainfo["info"]
-        pieces = metainfo["info"]["pieces"]
-        piece_length = metainfo["info"]["piece length"]
+        announce = metainfo.get("announce", None) # type: ignore
+        announce_list = metainfo.get("announce-list", None) # type: ignore
+        self.name = metainfo["info"]["name"] # type: ignore
+        self.has_multiple_files = "files" in metainfo["info"] # type: ignore
+        pieces = metainfo["info"]["pieces"] # type: ignore
+        piece_length = metainfo["info"]["piece length"] # type: ignore
 
         self.trackers = []
         self.peers = []
         self.files = None
         self.downloader = None
         self.TARGET_PEER_COUNT = 30
+        self.port = PORT  # sẽ được cập nhật trong init()
 
-        # ── Tracker interval state ─────────────────────────────────────
-        # Persisted across re-announces so the loop never resets to default
-        # on restart. Key = repr(tracker), value = interval in seconds.
         self._tracker_intervals: dict[str, int] = {}
         self._next_announce_time: float = 0.0
 
-        files = metainfo["info"]["files"] if self.has_multiple_files else self.name
+        files = metainfo["info"]["files"] if self.has_multiple_files else self.name # type: ignore
 
         size = 0
         if self.has_multiple_files:
-            size = sum([f["length"] for f in files])
+            size = sum([f["length"] for f in files]) # type: ignore
         else:
-            size = metainfo["info"]["length"]
+            size = metainfo["info"]["length"] # type: ignore
 
-        bencoded_info = bencode_wrapper.bencode(metainfo["info"])
+        bencoded_info = bencode_wrapper.bencode(metainfo["info"]) # type: ignore
         info_hash = hashlib.sha1(bencoded_info).digest()
 
         piece_hashes = []
@@ -92,6 +92,7 @@ class Torrent:
             "peer_id": gen_secure_peer_id(),
             "downloaded": 0,
             "uploaded": 0,
+            "port": PORT,  # sẽ được cập nhật trong init() sau khi bind thành công
         }
 
         self.files = FileTree(self.torrent_info)
@@ -104,11 +105,38 @@ class Torrent:
         self.save_dir.mkdir(parents=True, exist_ok=True)
 
     # ─────────────────────────────────────────────────────────────
+    # Fix 3: Bind TCP server động, thử lần lượt 6881-6889
+    # ─────────────────────────────────────────────────────────────
+
+    async def _bind_tcp_server(self) -> int | None:
+        """Thử bind lần lượt các port BitTorrent. Trả về port đã bind hoặc None."""
+        for try_port in _BITTORRENT_PORT_RANGE:
+            try:
+                self.server = await asyncio.start_server(
+                    self.handle_incoming_connection, "0.0.0.0", try_port
+                )
+                logger.info(f"Torrent: TCP Server listening on 0.0.0.0:{try_port}")
+                return try_port
+            except OSError:
+                continue
+
+        # Fallback: để OS chọn port bất kỳ
+        try:
+            self.server = await asyncio.start_server(
+                self.handle_incoming_connection, "0.0.0.0", 0
+            )
+            bound_port = self.server.sockets[0].getsockname()[1]
+            logger.info(f"Torrent: TCP Server on OS-assigned port {bound_port}")
+            return bound_port
+        except Exception as e:
+            logger.error(f"Torrent: Failed to start TCP Server: {e}")
+            return None
+
+    # ─────────────────────────────────────────────────────────────
     # Tracker interval helpers
     # ─────────────────────────────────────────────────────────────
 
     def _update_tracker_intervals(self):
-        """Cache the announce interval from every active tracker response."""
         from .core.trackers import HTTPTracker
         for tracker in self.trackers:
             if not getattr(tracker, "active", False):
@@ -121,19 +149,18 @@ class Torrent:
             self._tracker_intervals[repr(tracker)] = int(interval)
 
     def _next_sleep_seconds(self) -> int:
-        """Minimum announce interval across all active trackers (default 1800)."""
         return min(self._tracker_intervals.values()) if self._tracker_intervals else 1800
 
     # ─────────────────────────────────────────────────────────────
-    # Init / connection
+    # Init
     # ─────────────────────────────────────────────────────────────
 
     async def broadcast_have(self, piece_index):
-        if hasattr(self, 'peers'):
+        if hasattr(self, "peers"):
             tasks = [
                 p.send_have(piece_index)
                 for p in self.peers
-                if getattr(p, 'has_handshaked', False) and getattr(p, 'active', False)
+                if getattr(p, "has_handshaked", False) and getattr(p, "active", False)
             ]
             if tasks:
                 await asyncio.gather(*tasks)
@@ -146,13 +173,11 @@ class Torrent:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.torrent_info["save_dir"] = self.save_dir
 
-        try:
-            self.server = await asyncio.start_server(
-                self.handle_incoming_connection, "0.0.0.0", PORT
-            )
-            logger.info(f"Torrent Initialization: TCP Server listening on 0.0.0.0:{PORT}")
-        except Exception as e:
-            logger.error(f"Failed to start TCP Server on {PORT}: {e}")
+        # Fix 3: bind động, cập nhật port vào torrent_info trước khi liên hệ tracker
+        bound_port = await self._bind_tcp_server()
+        if bound_port:
+            self.port = bound_port
+            self.torrent_info["port"] = bound_port
 
         await self._contact_trackers()
         peer_addrs = self._get_peers()
@@ -172,13 +197,12 @@ class Torrent:
         active_peers = sum(1 for p in self.peers if p.has_handshaked)
         active_trackers = sum(1 for t in self.trackers if t.active)
         logger.info(
-            f"Torrent Initialization: {active_trackers} trackers active, "
-            f"{active_peers} peers active."
+            f"Torrent Initialization: port={self.port}, "
+            f"{active_trackers} trackers, {active_peers} peers active."
         )
 
     async def handle_incoming_connection(self, reader, writer):
-        address = writer.get_extra_info('peername')
-        logger.debug(f"Accepted incoming connection from {address}")
+        address = writer.get_extra_info("peername")
         peer = Peer(address, self.torrent_info)
         peer.reader = reader
         peer.writer = writer
@@ -217,14 +241,13 @@ class Torrent:
             await peer.disconnect()
 
     def show_files(self):
-        for f in self.files:
+        for f in self.files: # type: ignore
             print(f)
 
     def _get_peers(self):
         peers_aggregated = set()
         for tracker in self.trackers:
             peers_aggregated |= set(tracker.peers)
-        logger.debug(f"Torrent: Aggregated {len(peers_aggregated)} unique peers.")
         return peers_aggregated
 
     async def _contact_trackers(self, event="started"):
@@ -237,14 +260,7 @@ class Torrent:
 
         tasks = [asyncio.create_task(t.get_peers()) for t in self.trackers]
         done, pending = await asyncio.wait(tasks, timeout=20)
-
-        # Persist intervals immediately after every scrape
         self._update_tracker_intervals()
-
-        logger.info(
-            f"Tracker scrape: {len(done)} done, {len(pending)} pending. "
-            f"Intervals cached: {self._tracker_intervals}"
-        )
 
     def get_torrent_file(self, format="json", verbose=False):
         torrent_info = copy.deepcopy(self.torrent_info)
@@ -261,7 +277,6 @@ class Torrent:
     # ─────────────────────────────────────────────────────────────
 
     async def download(self, file):
-        """Download a single File object (backwards-compat helper)."""
         active_peers = [p for p in self.peers if p.has_handshaked and p.active]
         self.downloader = FilesDownloadManager(self.torrent_info, active_peers)
         with PieceWriter(self.save_dir, file) as pw:
@@ -269,10 +284,6 @@ class Torrent:
                 pw.write(piece)
 
     async def download_files(self, file_indices: list[int]):
-        """
-        Download multiple files by index using a single shared peer pool.
-        Completed pieces are cached across files for efficiency.
-        """
         if not self.files:
             return
 
@@ -296,14 +307,13 @@ class Torrent:
     # ─────────────────────────────────────────────────────────────
 
     async def maintain_peers(self):
-        """Prune stale/misbehaving peers (TTL + thresholds) and replenish pool."""
         while True:
             to_remove = [
                 p for p in self.peers
                 if (
-                    getattr(p, 'failed_attempts', 0) > PEER_MAX_FAILS
-                    or getattr(p, 'total_disconnects', 0) > PEER_MAX_DISCONNECTS
-                    or getattr(p, 'choke_count', 0) > PEER_MAX_CHOKES
+                    getattr(p, "failed_attempts", 0) > PEER_MAX_FAILS
+                    or getattr(p, "total_disconnects", 0) > PEER_MAX_DISCONNECTS
+                    or getattr(p, "choke_count", 0) > PEER_MAX_CHOKES
                     or p.is_timed_out()
                 )
             ]
@@ -359,21 +369,9 @@ class Torrent:
             await asyncio.sleep(60)
 
     async def _tracker_announce_loop(self):
-        """
-        Re-announce to trackers using the interval they advertised.
-        The interval is cached in self._tracker_intervals so it survives
-        across calls without reverting to the 1800s default.
-        """
         while True:
             sleep_time = self._next_sleep_seconds()
             self._next_announce_time = time.time() + sleep_time
-
-            logger.info(
-                f"Torrent {self.name}: Next announce in {sleep_time}s "
-                f"({time.strftime('%H:%M:%S', time.localtime(self._next_announce_time))})"
-            )
             await asyncio.sleep(sleep_time)
-
-            logger.info(f"Torrent {self.name}: Sending tracker heartbeat...")
             await self._contact_trackers(event="none")
             self._update_tracker_intervals()
