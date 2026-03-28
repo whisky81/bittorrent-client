@@ -52,8 +52,10 @@ class Tracker:
     def gen_udp_announce_req(self, connection_id: int = 0, transaction_id: int = 0) -> dict:
         event_map = {"none": 0, "completed": 1, "started": 2, "stopped": 3}
         event_val = event_map.get(self.torrent_info.get("event", "none"), 0)
-        # Fix 3: sử dụng port động từ torrent_info thay vì hardcode
-        listen_port = self.torrent_info.get("port", DEFAULT_PORT)
+        # Ưu tiên external_port (sau khi NAT mapping thành công) để tracker
+        # quảng bá đúng địa chỉ mà peers bên ngoài có thể kết nối được.
+        listen_port = self.torrent_info.get("external_port") \
+                      or self.torrent_info.get("port", DEFAULT_PORT)
         announce_params = {
             "connection_id": connection_id,
             "action": 1,
@@ -73,8 +75,9 @@ class Tracker:
 
     def gen_http_announce_req(self):
         event_str = self.torrent_info.get("event", "started")
-        # Fix 3: sử dụng port động từ torrent_info
-        listen_port = self.torrent_info.get("port", DEFAULT_PORT)
+        # Ưu tiên external_port nếu NAT traversal thành công
+        listen_port = self.torrent_info.get("external_port") \
+                      or self.torrent_info.get("port", DEFAULT_PORT)
         req = {
             "info_hash": quote_from_bytes(self.torrent_info["info_hash"]),
             "peer_id": quote_from_bytes(self.torrent_info["peer_id"]),
@@ -119,7 +122,14 @@ class Tracker:
 
     def parse_udp_announce_res(self, response):
         if len(response) < 20:
-            raise ValueError("fail: parse udp announce response (< 20 bytes)")
+            # BUG FIX: Không raise — hàm được gọi từ asyncio datagram_received callback.
+            # Exception ở đây sẽ không được catch và sẽ crash vào asyncio event loop
+            # tạo ra "Exception in callback _SelectorDatagramTransport._read_ready()" trong log.
+            logger.warning(
+                f"UDP tracker: announce response quá ngắn ({len(response)}B) "
+                "— có thể là error packet, bỏ qua."
+            )
+            return {}
         response, raw_peers = response[:20], response[20:]
         action, transaction_id, interval, leechers, seeders = unpack(">IIIII", response)
         peers = []
@@ -162,9 +172,12 @@ class UDPTracker(Tracker):
                 if hasattr(self.parent_obj, "connect_future") and not self.parent_obj.connect_future.done():
                     self.parent_obj.connect_future.set_result(True)
             elif action == 1:
-                self.parent_obj.announce_response = self.parent_obj.parse_udp_announce_res(data)
-                if hasattr(self.parent_obj, "announce_future") and not self.parent_obj.announce_future.done():
-                    self.parent_obj.announce_future.set_result(True)
+                parsed = self.parent_obj.parse_udp_announce_res(data)
+                # parse_udp_announce_res trả về {} khi response lỗi — không set future
+                if parsed:
+                    self.parent_obj.announce_response = parsed
+                    if hasattr(self.parent_obj, "announce_future") and not self.parent_obj.announce_future.done():
+                        self.parent_obj.announce_future.set_result(True)
             else:
                 logger.warning(f"Unsupported action {action} received")
 

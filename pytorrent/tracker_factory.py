@@ -1,5 +1,5 @@
 from urllib.parse import urlparse
-from pytorrent.core.trackers import UDPTracker, HTTPTracker
+from .core.trackers import UDPTracker, HTTPTracker
 
 class TrackerFactory:
     def __new__(cls, tracker_addr, torrent_info):

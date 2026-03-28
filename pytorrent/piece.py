@@ -20,9 +20,9 @@ class Piece:
         self.priority = priority
 
         self._is_last_piece = False
-        self.total_blocks = piece_info["total_blocks"]
-        self.piece_size = piece_info["piece_length"]
-        self.piece_length = piece_info["piece_length"]
+        self.total_blocks    = piece_info["total_blocks"]
+        self.piece_size      = piece_info["piece_length"]
+        self.piece_length    = piece_info["piece_length"]
         self.last_block_size = 0
 
         if self.num == piece_info["total_pieces"]:
@@ -34,6 +34,11 @@ class Piece:
             if self.last_block_size > 0:
                 self.total_blocks += 1
 
+        # BUG FIX: Lưu lại peer đã tải piece này để downloader có thể penalize
+        # khi SHA-1 validation thất bại. Trước đây không có cơ chế này nên peer
+        # xấu tiếp tục được sử dụng và gây SHA-1 failure lặp đi lặp lại.
+        self._last_peer = None
+
     def __repr__(self):
         return f"Piece #{self.num}"
 
@@ -44,19 +49,14 @@ class Piece:
             block_num = offset // BLOCK_SIZE
             logger.debug(f"Piece #{self.num}: Requesting block #{block_num} from {peer}")
             request_message = gen_request_msg(self.num, offset)
-            is_last_block = True if block_num == (self.total_blocks - 1) else False
+            is_last_block = block_num == (self.total_blocks - 1)
 
             if self._is_last_piece and is_last_block and self.last_block_size > 0:
-                request_message = gen_request_msg(
-                    self.num, offset, self.last_block_size
-                )
+                request_message = gen_request_msg(self.num, offset, self.last_block_size)
 
             requests += request_message
 
-        # Write all request messages at once (non-blocking, no response drain)
         await peer.write_only(requests)
-
-        # Read exactly len(block_offsets) PIECE responses using length-prefix framing
         response = await peer.stream_pieces(len(block_offsets))
 
         if not response:
@@ -68,57 +68,45 @@ class Piece:
             blocks = await Handler(artifacts, peer=peer).handle()
             for block in blocks:  # type: ignore
                 logger.debug(f"Piece #{self.num}: Received {block} from {peer}")
-
             return blocks  # type: ignore
 
-        except TypeError as E:
+        except TypeError as e:
             logger.warning(
-                f"Piece #{self.num}: Fetching blocks from {peer} failed "
-                f"(Returned None). Error: {E}"
+                f"Piece #{self.num}: Fetching blocks from {peer} failed. Error: {e}"
             )
             self.adjust_blocks_per_cycle(-1)
             return None
 
     def is_piece_complete(self) -> bool:
-        for block_num in range(self.total_blocks):
-            if block_num not in self.blocks:
-                return False
-        return True
+        return all(b in self.blocks for b in range(self.total_blocks))
 
     def gen_offsets(self) -> set:
-        blocks = set()
-        for block_num in range(self.total_blocks):
-            if block_num not in self.blocks:
-                block_offset = block_num * BLOCK_SIZE
-                blocks.add(block_offset)
-        return blocks
+        return {
+            b * BLOCK_SIZE
+            for b in range(self.total_blocks)
+            if b not in self.blocks
+        }
 
     @staticmethod
-    def is_valid(piece, piece_hashmap):
+    def is_valid(piece: "Piece", piece_hashmap) -> bool:
         piece_hash = hashlib.sha1(piece.data).digest()
-
         if piece_hash != piece_hashmap[piece.num]:
-            logger.warning(
-                f"Piece #{piece.num}: SHA-1 hash validation failed. Dropping piece."
-            )
+            logger.warning(f"Piece #{piece.num}: SHA-1 validation failed. Dropping.")
             return False
-
         return True
 
     def adjust_blocks_per_cycle(self, value: int = 1):
         global BLOCKS_PER_CYCLE
-        BLOCKS_PER_CYCLE += value
-        BLOCKS_PER_CYCLE = max(BLOCKS_PER_CYCLE, MIN_BLOCKS_PER_CYCLE)
-        BLOCKS_PER_CYCLE = min(BLOCKS_PER_CYCLE, MAX_BLOCKS_PER_CYCLE)
-        logger.debug(
-            f"Piece #{self.num}: BLOCKS_PER_CYCLE adjusted to {BLOCKS_PER_CYCLE}"
+        BLOCKS_PER_CYCLE = max(
+            MIN_BLOCKS_PER_CYCLE,
+            min(MAX_BLOCKS_PER_CYCLE, BLOCKS_PER_CYCLE + value)
         )
+        logger.debug(f"Piece #{self.num}: BLOCKS_PER_CYCLE → {BLOCKS_PER_CYCLE}")
 
     async def download(self, peers_man: asyncio.PriorityQueue) -> "Piece":
         priority, peer = await peers_man.get()
 
         while not self.is_piece_complete():
-            # If peer is choking us, wait for unchoke event or rotate
             if getattr(peer, 'choking_me', True):
                 try:
                     await asyncio.wait_for(peer.unchoke_event.wait(), timeout=30.0)
@@ -126,7 +114,6 @@ class Piece:
                     await peers_man.put((priority + 5, peer))
                     priority, peer = await peers_man.get()
                     continue
-
                 if getattr(peer, 'choking_me', True):
                     continue
 
@@ -134,31 +121,29 @@ class Piece:
                 priority, peer = await peers_man.get()
                 continue
 
-            # BUG FIX: removed unused `task_list = list()` variable
             block_offsets = self.gen_offsets()
-
             if len(block_offsets) >= BLOCKS_PER_CYCLE:
                 offsets = set(random.sample(sorted(block_offsets), BLOCKS_PER_CYCLE))
             else:
-                offsets = self.gen_offsets()
+                offsets = block_offsets
 
             try:
-                blocks_task = self.fetch_blocks(offsets, peer)  # type: ignore
-                results = await asyncio.wait_for(blocks_task, timeout=15)
-
+                results = await asyncio.wait_for(
+                    self.fetch_blocks(list(offsets), peer), timeout=15
+                )
                 if results:
                     self.adjust_blocks_per_cycle(1)
                     for block in results:
                         if block.data:
-                            self.blocks.update({block.num: block})
+                            self.blocks[block.num] = block
+                    # Ghi nhận peer đã cung cấp dữ liệu để downloader có thể penalize nếu cần
+                    self._last_peer = peer
                 else:
                     await peers_man.put((priority + 1, peer))
                     priority, peer = await peers_man.get()
 
             except (BrokenPipeError, IOError, asyncio.TimeoutError, Exception) as e:
-                logger.debug(
-                    f"Piece #{self.num}: Error downloading from {peer}: {e}"
-                )
+                logger.debug(f"Piece #{self.num}: Error from {peer}: {e}")
                 await peers_man.put((priority + 5, peer))
                 priority, peer = await peers_man.get()
                 continue

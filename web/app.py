@@ -99,7 +99,7 @@ def open_folder(path: str) -> tuple[bool, str]:
     system = platform.system()
     try:
         if system == "Windows":
-            os.startfile(str(folder))
+            os.startfile(str(folder)) # type: ignore
         elif system == "Darwin":
             subprocess.Popen(["open", str(folder)])
         else:

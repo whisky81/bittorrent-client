@@ -1,33 +1,33 @@
 from struct import unpack
 from struct import error as UnpackError
 from .constants import (
-    CHOKE,
-    UNCHOKE,
-    HAVE,
-    BITFIELD,
-    PIECE,
-    HANDSHAKE_LEN,
-    INTERESTED,
-    REQUEST,
+    CHOKE, UNCHOKE, HAVE, BITFIELD, PIECE,
+    HANDSHAKE_LEN, INTERESTED, REQUEST,
 )
 import logging
 
 logger = logging.getLogger(__name__)
+
+# BUG FIX: Giới hạn message_len hợp lý.
+# Nếu message_len > MAX (2MB), dữ liệu bị desync — drop toàn bộ buffer.
+# Không giới hạn → parser thử skip [4 + 2GB] bytes, Python slice không lỗi
+# nhưng response buffer không bao giờ cạn → vòng while bất tận + log rác.
+_MAX_MSG_LEN = 2 * 1024 * 1024   # 2 MB
 
 
 class PeerResponseParser:
     def __init__(self, response):
         self.response = response
         self.messages = {
-            CHOKE: self.parse_choke,
-            UNCHOKE: self.parse_unchoke,
-            INTERESTED: self.parse_interested,
-            REQUEST: self.parse_request,
-            HAVE: self.parse_have,
-            BITFIELD: self.parse_bitfield,
-            PIECE: self.parse_piece,
-            19: self.parse_handshake,
-            None: self.parse_keep_alive,
+            CHOKE:     self.parse_choke,
+            UNCHOKE:   self.parse_unchoke,
+            INTERESTED:self.parse_interested,
+            REQUEST:   self.parse_request,
+            HAVE:      self.parse_have,
+            BITFIELD:  self.parse_bitfield,
+            PIECE:     self.parse_piece,
+            19:        self.parse_handshake,
+            None:      self.parse_keep_alive,
         }
         self.artifacts = dict()
 
@@ -39,6 +39,19 @@ class PeerResponseParser:
                     return self.artifacts
 
                 self.message_len = unpack(">I", self.response[:4])[0]
+
+                # BUG FIX: Sanity check trên message_len.
+                # Các message_id hợp lệ lớn nhất là PIECE (7), payload tối đa ~1MB.
+                # Nếu message_len > 2MB thì stream đã bị desync (thường do partial read
+                # ghép với garbage data). Drop toàn bộ buffer để tránh log nhiễu.
+                if self.message_len > _MAX_MSG_LEN:
+                    logger.warning(
+                        f"PeerResponseParser: implausibly large message_len="
+                        f"{self.message_len} — stream desynced, dropping buffer"
+                    )
+                    self.response = bytes()
+                    break
+
                 self.message_id = (
                     unpack(">B", self.response[4:5])[0]
                     if self.message_len != 0
@@ -50,24 +63,21 @@ class PeerResponseParser:
                     continue
 
                 if self.message_id not in self.messages:
-                    logger.warning(
-                        f"PeerResponseParser: Unhandled message_id={self.message_id}, "
-                        f"length={self.message_len}"
+                    logger.debug(
+                        f"PeerResponseParser: unknown message_id={self.message_id}, "
+                        f"len={self.message_len} — skipping"
                     )
-                    # Skip this unknown message to avoid infinite loop
                     self.response = self.response[4 + self.message_len:]
                     continue
 
                 logger.debug(
-                    f"PeerResponseParser: Parsing message_id={self.message_id}, "
-                    f"length={self.message_len}"
+                    f"PeerResponseParser: parsing message_id={self.message_id}, "
+                    f"len={self.message_len}"
                 )
                 self.messages[self.message_id]()
 
-            except Exception as E:
-                logger.error(
-                    f"PeerResponseParser: Exception while parsing response - {E}"
-                )
+            except Exception as e:
+                logger.error(f"PeerResponseParser: exception — {e}")
                 self.response = bytes()
 
         return self.artifacts
@@ -100,7 +110,6 @@ class PeerResponseParser:
             self.response = self.response[17:]
 
     def parse_have(self):
-        # BUG FIX: accumulate multiple HAVE messages instead of overwriting
         message = self.response[:9]
         piece_index = unpack(">I", message[5:])[0]
         self.response = self.response[9:]
@@ -116,15 +125,13 @@ class PeerResponseParser:
         try:
             index, offset = unpack(">II", self.response[5:13])
             data = self.response[13:total]
-            block_info = (index, offset, data)
-            self.artifacts["pieces"].append(block_info)
+            self.artifacts["pieces"].append((index, offset, data))
         except UnpackError:
             raise TypeError("Parser: Failed to extract piece")
         finally:
             self.response = self.response[total:]
 
     def parse_bitfield(self):
-        # Since bitfield len is 1+X. X is length of bitfield
         self.message_len -= 1
         total = self.message_len + self.message_id
         message = self.response[5:total]

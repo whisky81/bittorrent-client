@@ -1,11 +1,5 @@
-1: đôi khi gặp lỗi chưa tải xong nhưng vẫn hiện 100% 
-    và chuyển sang seeding ở phía ui nhưng phần files khi click vào vẫn hiện tiến trình đúng
-    lưu ý: đảm bảo hiển thị chính xác thông tin phía ui
-2: loại bỏ ghi log vào file pytorrent.log các thông tin 
-    như [INFO] werkzeug: 127.0.0.1 - - [27/Mar/2026 14:44:05] "GET / HTTP/1.1" 200 -
-    lưu ý: có thể không cần ghi log vì khi chạy có thể có hàng triệu entry được ghi khi chạy client chưa đầy 10 phút 
-3: Sử dụng port động (sau đó chuẩn hóa về dải BitTorrent) để tránh xung đột khi seeding 
-4: xử lý race condition và deadlock khi dùng chung download manager 
-5: limit số lượng seeding 
-6: tìm và thay thế polling bằng sse nếu cần thiết để đảm bảo tối ưu tài nguyên không tràn memory 
-    vì sse tôi ưu tài nguyên hơn 
+1: hãy cập nhật trạng thái port có forwarding lên ui? và kiểm tra xem ở phần logic nó đúng chưa
+2: tôi đã phát hiện 1 lỗi khi end_byte của 1 file ở giữa 1 piece thì start_byte của file thứ 2 sẽ được ghi vòa file tiếp theo nhưng từ lúc đó trở đi thì các piece nhận được luôn ở trạng thái mismatch dẫn đến stalled vĩnh viễn  từ đó tôi nghĩ có 1 con trỏ (offset) nào đó chưa được di chuyển đến đầu piece tiếp theo làm cho hàm check hash bị sai liên tục 
+3: hiện tại thì số byte uploaded vẫn bằng 0 hãy cho ngừoi dùng trên ui biết liệu porrt đó có mở trên router chưa thông qua pcp 
+    client là p2p app nên mở pcp theo peer message đúng không?
+4: hãy đảm bảo import export và sử dụng đúng 

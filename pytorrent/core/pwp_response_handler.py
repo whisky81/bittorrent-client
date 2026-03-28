@@ -14,7 +14,6 @@ class PeerResponseHandler:
     async def handle(self):
         prev_len = None
         while self.artifacts:
-            # Guard: if no key was popped in this iteration, break to avoid infinite loop
             if len(self.artifacts) == prev_len:
                 logger.warning(f"PeerResponseHandler: artifacts did not shrink ({list(self.artifacts.keys())}), breaking")
                 break
@@ -45,7 +44,7 @@ class PeerResponseHandler:
 
     async def handle_choke(self):
         if not self.peer:
-            return 
+            return
         self.peer.choking_me = True
         self.peer.choke_count = getattr(self.peer, 'choke_count', 0) + 1
         if hasattr(self.peer, 'unchoke_event'):
@@ -54,7 +53,7 @@ class PeerResponseHandler:
 
     def handle_unchoke(self):
         if not self.peer:
-            return 
+            return
         self.peer.choking_me = False
         self.peer.am_interested = True
         if hasattr(self.peer, 'unchoke_event'):
@@ -68,7 +67,6 @@ class PeerResponseHandler:
         from .pwp_message_generator import gen_no_payload_msg
         from .constants import UNCHOKE
         logger.debug(f"PeerResponseHandler: Received Interested from {self.peer} — sending UNCHOKE")
-        # Note: we are unchoking THEM, doesn't affect their choking_me state for us
         unchoke_msg = gen_no_payload_msg(UNCHOKE)
         await self.peer.write_only(unchoke_msg)
         self.artifacts.pop("interested")
@@ -78,65 +76,65 @@ class PeerResponseHandler:
             return
         from .utils import PieceReader
         from .pwp_message_generator import gen_piece_msg
-        
+
         for req in self.artifacts.get("requests", []):
             index, begin, length = req
             logger.debug(f"PeerResponseHandler: {self.peer} requested piece {index} begin={begin} len={length}")
-            
+
             bitfield = self.peer.torrent_file.get("bitfield")
             if bitfield is None or not bitfield[index]:
                 logger.debug(f"PeerResponseHandler: We don't have piece {index}, skipping.")
                 continue
-                
+
             block_data = PieceReader.read(self.peer.torrent_file, index, begin, length)
             if block_data:
                 piece_msg = gen_piece_msg(index, begin, block_data)
                 await self.peer.write_only(piece_msg)
                 self.peer.torrent_file["uploaded"] = self.peer.torrent_file.get("uploaded", 0) + len(block_data)
-                logger.debug(
-                    f"PeerResponseHandler: Sent piece {index}+{begin} ({len(block_data)}B) to {self.peer}. "
-                    f"Total uploaded={self.peer.torrent_file['uploaded']}"
-                )
             else:
                 logger.warning(f"PeerResponseHandler: PieceReader returned empty for piece {index} begin={begin}")
-        
+
         self.artifacts.pop("requests", None)
 
     async def handle_handshake(self):
         if not self.peer:
-            return 
-        message = self.artifacts["handshake"]
-        if not message or len(message) < HANDSHAKE_LEN:
-            await self.peer.disconnect("Empty/None/Wrong handshake message! ")
             return
+        message = self.artifacts["handshake"]
+
+        # BUG FIX: luôn pop "handshake" trước khi return/disconnect để tránh
+        # "artifacts did not shrink" warning trong vòng lặp handle().
+        # Code cũ chỉ pop sau khi thành công → khi disconnect() được gọi do
+        # invalid handshake, artifact "handshake" không được xóa → infinite loop guard.
+        self.artifacts.pop("handshake")
+
+        if not message or len(message) < HANDSHAKE_LEN:
+            await self.peer.disconnect("Empty/None/Wrong handshake message!")
+            return
+
         pstrlen, pstr, res, info_hash, peer_id = unpack(">B19sQ20s20s", message)
 
         if pstrlen != 19 or pstr != PROTOCOL_NAME:
-            await self.peer.disconnect("Invalid pstrlen or pstr! ")
-            return 
-
-        handshake_response = {
-            "pstrlen": pstrlen,
-            "pstr": pstr,
-            "reserved": res,
-            "info_hash": info_hash,
-            "peer_id": peer_id,
-        }
+            await self.peer.disconnect("Invalid pstrlen or pstr!")
+            return
 
         self.peer.has_handshaked = True
-        self.peer.handshake_response = handshake_response
+        self.peer.handshake_response = {
+            "pstrlen":  pstrlen,
+            "pstr":     pstr,
+            "reserved": res,
+            "info_hash":info_hash,
+            "peer_id":  peer_id,
+        }
         logger.debug(f"PeerResponseHandler: Received Handshake from {self.peer}")
-        self.artifacts.pop("handshake")
 
     def handle_bitfield(self):
         if not self.peer:
-            return 
+            return
         if "bitfield" in self.artifacts:
             message = self.artifacts["bitfield"]
             pieces = BitArray(message)
-            self.peer.has_bitfield = True 
+            self.peer.has_bitfield = True
         else:
-            # HAVE message without prior BITFIELD — use existing pieces or initialize
             num_pieces = len(self.peer.torrent_file.get("piece_hashes", []))
             pieces = BitArray(getattr(self.peer, 'pieces', None) or num_pieces)
 
@@ -154,7 +152,7 @@ class PeerResponseHandler:
             if "bitfield" in self.artifacts:
                 self.artifacts.pop("bitfield")
         except KeyError:
-            ...
+            pass
         finally:
             logger.debug(f"PeerResponseHandler: Updated bitfield for {self.peer}")
 
@@ -167,6 +165,5 @@ class PeerResponseHandler:
                 blocks.append(block)
             except TypeError:
                 raise TypeError(f"Handler: Failed To Extract Piece sent by {self.peer}")
-
         self.artifacts.pop("pieces")
         return blocks
