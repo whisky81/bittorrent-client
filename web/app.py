@@ -10,14 +10,16 @@ import logging
 from pathlib import Path
 from collections import deque
 
+# Fix 2: Tắt werkzeug HTTP access log trước khi import Flask
+# (tránh hàng triệu dòng log mỗi giờ do SSE/polling)
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-from flask import Flask, render_template, jsonify, request, Response, stream_with_context  # noqa: E402
-from pytorrent.torrent import Torrent  # noqa: E402
-from pytorrent.download_manager import DownloadManager  # noqa: E402
+from flask import Flask, render_template, jsonify, request, Response, stream_with_context
+from pytorrent.torrent import Torrent
+from pytorrent.download_manager import DownloadManager
 
 app = Flask(__name__)
 download_manager = DownloadManager()
@@ -97,7 +99,7 @@ def open_folder(path: str) -> tuple[bool, str]:
     system = platform.system()
     try:
         if system == "Windows":
-            os.startfile(str(folder)) # type: ignore
+            os.startfile(str(folder))
         elif system == "Darwin":
             subprocess.Popen(["open", str(folder)])
         else:
@@ -239,6 +241,7 @@ def _build_torrents_data() -> list:
                     })
 
             save_dir_str = str(torrent.save_dir) if hasattr(torrent, "save_dir") else ""
+            nat_st = torrent.get_nat_status() if hasattr(torrent, "get_nat_status") else {}
 
             data.append({
                 "info_hash": info_hash,
@@ -259,6 +262,12 @@ def _build_torrents_data() -> list:
                 "ratio": ratio,
                 "num_files": len(torrent.files) if torrent.files else 0,
                 "save_dir": save_dir_str,
+                "nat": {
+                    "method":        nat_st.get("method"),
+                    "active":        nat_st.get("active", False),
+                    "external_ip":   nat_st.get("external_ip"),
+                    "external_port": nat_st.get("external_port"),
+                },
                 "details": {
                     "peers": peer_details,
                     "trackers": tracker_details,
@@ -520,7 +529,12 @@ def add_torrent():
 
 @app.route("/api/delete/<info_hash>", methods=["DELETE"])
 def delete_torrent(info_hash):
-    active_torrents.pop(info_hash, None)
+    torrent = active_torrents.pop(info_hash, None)
+    if torrent and hasattr(torrent, "cleanup_nat"):
+        try:
+            torrent.cleanup_nat()
+        except Exception:
+            pass
     torrent_stats.pop(info_hash, None)
     torrent_file_paths.pop(info_hash, None)
     torrent_selected_files.pop(info_hash, None)
@@ -530,5 +544,5 @@ def delete_torrent(info_hash):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
     print("Running on http://127.0.0.1:5000")
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)

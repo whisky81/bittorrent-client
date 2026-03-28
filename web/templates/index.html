@@ -527,6 +527,28 @@ function renderStatusBar() {
     document.getElementById('sb-peers').textContent = torrents.reduce((s,t)=>s+t.peers_count,0);
 }
 
+function buildNatRow(nat) {
+    if (!nat) return '';
+    const active = nat.active;
+    const method = nat.method ? nat.method.toUpperCase() : null;
+    let badge, info;
+    if (active && method) {
+        badge = `<span style="background:rgba(48,209,88,.12);color:var(--green);font-size:10px;
+                   padding:1px 6px;border-radius:3px;font-weight:500;">${method}</span>`;
+        info  = `${nat.external_ip || '?'}:${nat.external_port || '?'}`;
+    } else {
+        badge = `<span style="background:rgba(255,159,10,.12);color:var(--orange);font-size:10px;
+                   padding:1px 6px;border-radius:3px;font-weight:500;">No mapping</span>`;
+        info  = `Port ${nat.external_port || '?'} (manual forward needed)`;
+    }
+    return `<div class="gen-item"><span class="gen-lbl">NAT</span>
+                <span class="gen-val" style="display:flex;align-items:center;gap:6px">
+                    ${badge}
+                    <span style="font-size:11px;color:var(--text-muted)">${info}</span>
+                </span>
+            </div>`;
+}
+
 function buildSaveDirLink(savePath) {
     if (!savePath) return '<span style="color:var(--text-muted)">—</span>';
     const escaped = savePath.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -561,6 +583,7 @@ function renderDetail() {
             <div class="gen-item"><span class="gen-lbl">Peers</span><span class="gen-val">${t.peers_count}</span></div>
             <div class="gen-item"><span class="gen-lbl">Files</span><span class="gen-val">${t.num_files}</span></div>
             <div class="gen-item"><span class="gen-lbl">Hash</span><span class="gen-val" style="font-size:10px;color:var(--text-muted)">${t.info_hash.substring(0,24)}…</span></div>
+            ${buildNatRow(t.nat)}
             <div class="gen-item" style="grid-column:1/-1;align-items:center">
                 <span class="gen-lbl">Save Dir</span>
                 <span style="flex:1">${buildSaveDirLink(t.save_dir)}</span>

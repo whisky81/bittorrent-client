@@ -10,6 +10,7 @@ import logging
 from .core.file_utils import FileTree
 from .core import bencode_wrapper
 from .core.utils import PieceWriter, gen_secure_peer_id
+from .core.nat_traversal import NATTraversal
 from .peer import Peer
 from .tracker_factory import TrackerFactory
 from .downloader import FilesDownloadManager
@@ -22,7 +23,6 @@ PEER_MAX_FAILS = 5
 PEER_MAX_DISCONNECTS = 10
 PEER_MAX_CHOKES = 30
 
-# Fix 3: dải port chuẩn BitTorrent
 _BITTORRENT_PORT_RANGE = range(6881, 6890)
 
 
@@ -34,42 +34,42 @@ class Torrent:
             with open(torrent_file, "rb") as f:
                 bencoded_data = f.read()
 
-        metainfo = bencode_wrapper.bdecode(bencoded_data)
-        announce = metainfo.get("announce", None) # type: ignore
-        announce_list = metainfo.get("announce-list", None) # type: ignore
-        self.name = metainfo["info"]["name"] # type: ignore
-        self.has_multiple_files = "files" in metainfo["info"] # type: ignore
-        pieces = metainfo["info"]["pieces"] # type: ignore
-        piece_length = metainfo["info"]["piece length"] # type: ignore
+        metainfo        = bencode_wrapper.bdecode(bencoded_data)
+        announce        = metainfo.get("announce", None)       # type: ignore
+        announce_list   = metainfo.get("announce-list", None)  # type: ignore
+        self.name               = metainfo["info"]["name"]           # type: ignore
+        self.has_multiple_files = "files" in metainfo["info"]        # type: ignore
+        pieces                  = metainfo["info"]["pieces"]         # type: ignore
+        piece_length            = metainfo["info"]["piece length"]   # type: ignore
 
-        self.trackers = []
-        self.peers = []
-        self.files = None
+        self.trackers   = []
+        self.peers      = []
+        self.files      = None
         self.downloader = None
         self.TARGET_PEER_COUNT = 30
-        self.port = PORT  # sẽ được cập nhật trong init()
+        self.port  = PORT
+        self._nat: NATTraversal | None = None
 
         self._tracker_intervals: dict[str, int] = {}
         self._next_announce_time: float = 0.0
 
-        files = metainfo["info"]["files"] if self.has_multiple_files else self.name # type: ignore
+        files = metainfo["info"]["files"] if self.has_multiple_files else self.name  # type: ignore
 
         size = 0
         if self.has_multiple_files:
-            size = sum([f["length"] for f in files]) # type: ignore
+            size = sum(f["length"] for f in files)  # type: ignore
         else:
-            size = metainfo["info"]["length"] # type: ignore
+            size = metainfo["info"]["length"]  # type: ignore
 
-        bencoded_info = bencode_wrapper.bencode(metainfo["info"]) # type: ignore
-        info_hash = hashlib.sha1(bencoded_info).digest()
+        bencoded_info = bencode_wrapper.bencode(metainfo["info"])  # type: ignore
+        info_hash     = hashlib.sha1(bencoded_info).digest()
 
         piece_hashes = []
         if len(pieces) % 20 != 0:
             raise ValueError("corrupted pieces")
         num_pieces = len(pieces) // 20
         for i in range(num_pieces):
-            piece = pieces[i * 20: (i + 1) * 20]
-            piece_hashes.append(piece)
+            piece_hashes.append(pieces[i * 20 : (i + 1) * 20])
 
         trackers = []
         if announce:
@@ -81,46 +81,46 @@ class Torrent:
                         trackers.append(tracker)
 
         self.torrent_info = {
-            "name": self.name,
-            "size": size,
-            "files": files,
-            "piece_length": piece_length,
-            "info_hash": info_hash,
-            "piece_hashes": piece_hashes,
-            "peers": [],
-            "trackers": trackers,
-            "peer_id": gen_secure_peer_id(),
-            "downloaded": 0,
-            "uploaded": 0,
-            "port": PORT,  # sẽ được cập nhật trong init() sau khi bind thành công
+            "name":          self.name,
+            "size":          size,
+            "files":         files,
+            "piece_length":  piece_length,
+            "info_hash":     info_hash,
+            "piece_hashes":  piece_hashes,
+            "peers":         [],
+            "trackers":      trackers,
+            "peer_id":       gen_secure_peer_id(),
+            "downloaded":    0,
+            "uploaded":      0,
+            "port":          PORT,   # local port, updated after bind
+            "external_ip":   None,   # filled by NAT traversal
+            "external_port": PORT,   # external port, updated by NAT traversal
         }
 
         self.files = FileTree(self.torrent_info)
         self.bitfield = BitArray(num_pieces)
-        self.torrent_info["bitfield"] = self.bitfield
-        self.torrent_info["broadcast_have"] = self.broadcast_have
+        self.torrent_info["bitfield"]        = self.bitfield
+        self.torrent_info["broadcast_have"]  = self.broadcast_have
 
         base_dir = Path(save_dir) if save_dir else Path.cwd() / "downloads"
         self.save_dir = base_dir / self.name
         self.save_dir.mkdir(parents=True, exist_ok=True)
 
     # ─────────────────────────────────────────────────────────────
-    # Fix 3: Bind TCP server động, thử lần lượt 6881-6889
+    # TCP server binding (dynamic port)
     # ─────────────────────────────────────────────────────────────
 
     async def _bind_tcp_server(self) -> int | None:
-        """Thử bind lần lượt các port BitTorrent. Trả về port đã bind hoặc None."""
         for try_port in _BITTORRENT_PORT_RANGE:
             try:
                 self.server = await asyncio.start_server(
                     self.handle_incoming_connection, "0.0.0.0", try_port
                 )
-                logger.info(f"Torrent: TCP Server listening on 0.0.0.0:{try_port}")
+                logger.info(f"Torrent: TCP Server on 0.0.0.0:{try_port}")
                 return try_port
             except OSError:
                 continue
 
-        # Fallback: để OS chọn port bất kỳ
         try:
             self.server = await asyncio.start_server(
                 self.handle_incoming_connection, "0.0.0.0", 0
@@ -131,6 +131,46 @@ class Torrent:
         except Exception as e:
             logger.error(f"Torrent: Failed to start TCP Server: {e}")
             return None
+
+    # ─────────────────────────────────────────────────────────────
+    # NAT traversal
+    # ─────────────────────────────────────────────────────────────
+
+    async def _setup_nat(self, internal_port: int):
+        """
+        Thử UPnP → NAT-PMP để mở cổng trên router.
+        Kết quả được lưu vào torrent_info để announce đúng địa chỉ.
+        """
+        self._nat = NATTraversal(internal_port)
+        ext_ip, ext_port = await self._nat.setup()
+
+        self.torrent_info["external_ip"]   = ext_ip
+        self.torrent_info["external_port"] = ext_port
+
+        if ext_ip:
+            logger.info(f"NAT traversal OK: external {ext_ip}:{ext_port}")
+        else:
+            logger.warning(
+                f"NAT traversal failed — client sẽ không nhận được kết nối vào "
+                f"nếu port {internal_port} chưa được forward trên router."
+            )
+
+    async def _nat_renewal_loop(self):
+        if self._nat:
+            await self._nat.renewal_loop()
+
+    def cleanup_nat(self):
+        """Xóa port mapping khi tắt. Gọi từ signal handler hoặc finally."""
+        if self._nat:
+            self._nat.cleanup()
+
+    def get_nat_status(self) -> dict:
+        if self._nat:
+            return self._nat.status
+        return {"method": None, "active": False,
+                "internal_port": self.port,
+                "external_port": self.torrent_info.get("external_port", self.port),
+                "external_ip": None}
 
     # ─────────────────────────────────────────────────────────────
     # Tracker interval helpers
@@ -152,7 +192,7 @@ class Torrent:
         return min(self._tracker_intervals.values()) if self._tracker_intervals else 1800
 
     # ─────────────────────────────────────────────────────────────
-    # Init
+    # Init / connection
     # ─────────────────────────────────────────────────────────────
 
     async def broadcast_have(self, piece_index):
@@ -173,37 +213,46 @@ class Torrent:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.torrent_info["save_dir"] = self.save_dir
 
-        # Fix 3: bind động, cập nhật port vào torrent_info trước khi liên hệ tracker
+        # 1. Bind TCP server (dynamic port in BitTorrent range)
         bound_port = await self._bind_tcp_server()
         if bound_port:
             self.port = bound_port
-            self.torrent_info["port"] = bound_port
+            self.torrent_info["port"]          = bound_port
+            self.torrent_info["external_port"] = bound_port  # default before NAT
 
-        await self._contact_trackers()
+        # 2. NAT traversal + tracker contact run concurrently
+        nat_task     = asyncio.create_task(self._setup_nat(bound_port or PORT))
+        tracker_task = asyncio.create_task(self._contact_trackers())
+        await asyncio.gather(nat_task, tracker_task)
+
         peer_addrs = self._get_peers()
 
         self.peers = [Peer(addr, self.torrent_info) for addr in peer_addrs]
-        await asyncio.gather(*[p.connect() for p in self.peers])
-        await asyncio.gather(*[p.handshake() for p in self.peers])
+        await asyncio.gather(*[p.connect()    for p in self.peers])
+        await asyncio.gather(*[p.handshake()  for p in self.peers])
         await asyncio.gather(*[p.interested() for p in self.peers])
 
         if not getattr(self, "_loops_started", False):
             asyncio.create_task(self._tracker_announce_loop())
             asyncio.create_task(self.maintain_peers())
+            asyncio.create_task(self._nat_renewal_loop())
             self._loops_started = True
 
         self.torrent_info["peers"] = peer_addrs
 
-        active_peers = sum(1 for p in self.peers if p.has_handshaked)
+        nat_st          = self.get_nat_status()
+        active_peers    = sum(1 for p in self.peers if p.has_handshaked)
         active_trackers = sum(1 for t in self.trackers if t.active)
         logger.info(
-            f"Torrent Initialization: port={self.port}, "
-            f"{active_trackers} trackers, {active_peers} peers active."
+            f"Torrent init complete: local_port={self.port}, "
+            f"NAT={nat_st.get('method', 'none')} "
+            f"ext={nat_st.get('external_ip')}:{nat_st.get('external_port')}, "
+            f"{active_trackers} trackers, {active_peers} peers."
         )
 
     async def handle_incoming_connection(self, reader, writer):
         address = writer.get_extra_info("peername")
-        peer = Peer(address, self.torrent_info)
+        peer    = Peer(address, self.torrent_info)
         peer.reader = reader
         peer.writer = writer
         peer.active = True
@@ -214,7 +263,7 @@ class Torrent:
                 await peer.disconnect("Empty handshake")
                 return
 
-            from .core.pwp_response_parse import PeerResponseParser as Parse
+            from .core.pwp_response_parse   import PeerResponseParser as Parse
             from .core.pwp_response_handler import PeerResponseHandler as Handler
 
             artifacts = Parse(handshake_data).parse()
@@ -222,15 +271,13 @@ class Torrent:
 
             if peer.has_handshaked:
                 from .core.pwp_message_generator import gen_handshake_msg, gen_bitfield_msg
-                reply = gen_handshake_msg(
+                peer.writer.write(gen_handshake_msg(
                     self.torrent_info["info_hash"], self.torrent_info["peer_id"]
-                )
-                peer.writer.write(reply)
+                ))
                 await peer.writer.drain()
 
                 if getattr(self, "bitfield", None) and self.bitfield.any(True):
-                    b_msg = gen_bitfield_msg(self.bitfield)
-                    peer.writer.write(b_msg)
+                    peer.writer.write(gen_bitfield_msg(self.bitfield))
                     await peer.writer.drain()
 
                 self.peers.append(peer)
@@ -241,7 +288,7 @@ class Torrent:
             await peer.disconnect()
 
     def show_files(self):
-        for f in self.files: # type: ignore
+        for f in self.files:  # type: ignore
             print(f)
 
     def _get_peers(self):
@@ -259,17 +306,17 @@ class Torrent:
                 self.trackers.append(tracker)
 
         tasks = [asyncio.create_task(t.get_peers()) for t in self.trackers]
-        done, pending = await asyncio.wait(tasks, timeout=20)
+        await asyncio.wait(tasks, timeout=20)
         self._update_tracker_intervals()
 
     def get_torrent_file(self, format="json", verbose=False):
         torrent_info = copy.deepcopy(self.torrent_info)
         torrent_info["info_hash"] = torrent_info["info_hash"].hex()
         piece_hashes = torrent_info.pop("piece_hashes")
-        peer_list = torrent_info.pop("peers")
+        peer_list    = torrent_info.pop("peers")
         if verbose:
             torrent_info["piece_hashes"] = [h.hex() for h in piece_hashes]
-            torrent_info["peers"] = tuple(peer_list)
+            torrent_info["peers"]        = tuple(peer_list)
         return json.dumps(torrent_info)
 
     # ─────────────────────────────────────────────────────────────
@@ -286,7 +333,6 @@ class Torrent:
     async def download_files(self, file_indices: list[int]):
         if not self.files:
             return
-
         valid = [i for i in file_indices if 0 <= i < len(self.files)]
         if not valid:
             return
@@ -311,9 +357,9 @@ class Torrent:
             to_remove = [
                 p for p in self.peers
                 if (
-                    getattr(p, "failed_attempts", 0) > PEER_MAX_FAILS
+                    getattr(p, "failed_attempts",   0) > PEER_MAX_FAILS
                     or getattr(p, "total_disconnects", 0) > PEER_MAX_DISCONNECTS
-                    or getattr(p, "choke_count", 0) > PEER_MAX_CHOKES
+                    or getattr(p, "choke_count",       0) > PEER_MAX_CHOKES
                     or p.is_timed_out()
                 )
             ]
@@ -327,9 +373,9 @@ class Torrent:
 
             active = [p for p in self.peers if p.active and p.has_handshaked]
             if len(active) < self.TARGET_PEER_COUNT:
-                existing = {p.address for p in self.peers}
+                existing  = {p.address for p in self.peers}
                 new_addrs = [a for a in self._get_peers() if a not in existing]
-                need = self.TARGET_PEER_COUNT - len(active)
+                need      = self.TARGET_PEER_COUNT - len(active)
                 for addr in new_addrs[:need]:
                     np = Peer(addr, self.torrent_info)
                     self.peers.append(np)
@@ -348,22 +394,37 @@ class Torrent:
                     self.downloader.add_peer(peer)
 
     async def seed(self):
-        logger.info(f"Torrent {self.name}: Entering SEED mode...")
+        """
+        Seeding mode — vô hạn.
+
+        Seeding thực sự được thực hiện bởi:
+          • TCP server → handle_incoming_connection (peers kết nối vào)
+          • maintain_peers → _init_new_peer → listen_forever (peers outgoing)
+          • _tracker_announce_loop (keepalive với tracker)
+          • _nat_renewal_loop (gia hạn UPnP/NAT-PMP mỗi 45 phút)
+        Tất cả đã được start trong init(). seed() chỉ giữ coroutine sống.
+
+        Bug cũ: gather listen_forever của peer ban đầu ở đây gây double-schedule
+        vì init() không start listen_forever — nay đã loại bỏ.
+        """
+        logger.info(f"Torrent '{self.name}': seed mode active (local port {self.port})")
+        nat = self.get_nat_status()
+        if nat.get("active"):
+            logger.info(
+                f"  External reachability: {nat['external_ip']}:{nat['external_port']} "
+                f"via {nat['method'].upper()}"
+            )
+        else:
+            logger.warning(
+                f"  No NAT mapping active. Seeder not reachable from outside "
+                f"unless port {self.port} is manually forwarded."
+            )
+
         if not getattr(self, "_loops_started", False):
             asyncio.create_task(self._tracker_announce_loop())
             asyncio.create_task(self.maintain_peers())
+            asyncio.create_task(self._nat_renewal_loop())
             self._loops_started = True
-
-        listen_tasks = [
-            asyncio.create_task(p.listen_forever())
-            for p in self.peers
-            if p.active and p.has_handshaked
-        ]
-        if listen_tasks:
-            results = await asyncio.gather(*listen_tasks, return_exceptions=True)
-            for r in results:
-                if isinstance(r, Exception):
-                    logger.debug(f"Seed: peer task ended with: {r}")
 
         while True:
             await asyncio.sleep(60)

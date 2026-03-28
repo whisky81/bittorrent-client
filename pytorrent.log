@@ -1,9 +1,519 @@
-2026-03-27 20:33:04,793 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.bitsearch.to:1337): [Errno -2] Name or service not known
-2026-03-27 20:33:04,793 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.tiny-vps.com:6969): [Errno -2] Name or service not known
-2026-03-27 20:33:04,793 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(retracker.netbynet.ru:2710): [Errno -2] Name or service not known
-2026-03-27 20:33:04,793 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(9.rarbg.com:2810): [Errno -2] Name or service not known
-2026-03-27 20:33:05,030 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.gbitt.info:80): [Errno -2] Name or service not known
-2026-03-27 20:33:05,098 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.openbittorrent.com:80): [Errno -2] Name or service not known
-2026-03-27 20:33:05,410 [ERROR] pytorrent.core.trackers: Error fetching peers from HTTPTracker(tracker.opentrackr.org:1337): Error Code: 400 - Invalid Request
-2026-03-27 20:33:05,849 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(retracker.lanta-net.ru:2710): [Errno -2] Name or service not known
-2026-03-27 20:38:36,489 [WARNING] pytorrent.torrent: Torrent: Pruned 1 peers.
+2026-03-28 11:04:07,764 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.tiny-vps.com:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:07,764 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(uploads.gamecoast.net:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:07,981 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(opentracker.i2p.rocks:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:08,183 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.tamersunion.org:443): [Errno -2] Name or service not known
+2026-03-28 11:04:08,183 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.openbittorrent.com:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:08,363 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.openbittorrent.com:80): [Errno -2] Name or service not known
+2026-03-28 11:04:08,367 [ERROR] pytorrent.core.trackers: Error fetching peers from HTTPTracker(nyaa.tracker.wf:7777): Error Code: 400 - Bad Request
+2026-03-28 11:04:08,558 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.publictracker.xyz:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:08,616 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.0x7c0.com:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:08,616 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.ccp.ovh:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:08,765 [ERROR] pytorrent.core.trackers: Error fetching peers from HTTPTracker(tracker1.520.jp:443): Error Code: 301 - Moved Permanently
+2026-03-28 11:04:08,803 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(run-2.publictracker.xyz:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:08,945 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(oh.fuuuuuck.com:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:09,038 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(private.anonseed.com:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:09,054 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(free.publictracker.xyz:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:09,145 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(mail.segso.net:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:09,306 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(public-tracker.cf:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:09,350 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.imgoingto.icu:443): [Errno -2] Name or service not known
+2026-03-28 11:04:09,449 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(fh2.cmp-gaming.com:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:09,498 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.farted.net:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:09,562 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.artixlinux.org:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:09,885 [ERROR] asyncio: Exception in callback _SelectorDatagramTransport._read_ready()
+handle: <Handle _SelectorDatagramTransport._read_ready()>
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 1249, in _read_ready
+    self._protocol.datagram_received(data, addr)
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 165, in datagram_received
+    self.parent_obj.announce_response = self.parent_obj.parse_udp_announce_res(data)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 122, in parse_udp_announce_res
+    raise ValueError("fail: parse udp announce response (< 20 bytes)")
+ValueError: fail: parse udp announce response (< 20 bytes)
+2026-03-28 11:04:10,352 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.opentrackr.org:1337): 
+2026-03-28 11:04:10,416 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(boysbitte.be:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:11,346 [WARNING] pytorrent.core.nat_traversal: NAT: UPnP và NAT-PMP đều thất bại. Client sẽ không nhận được kết nối vào nếu đứng sau NAT chặt.
+2026-03-28 11:04:11,346 [WARNING] pytorrent.torrent: NAT traversal failed — client sẽ không nhận được kết nối vào nếu port 6881 chưa được forward trên router.
+2026-03-28 11:04:15,455 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(public.publictracker.xyz:6969): [Errno -2] Name or service not known
+2026-03-28 11:04:15,862 [ERROR] pytorrent.core.trackers: Error fetching peers from HTTPTracker(tracker.opentrackr.org:1337): Error Code: 400 - Invalid Request
+2026-03-28 11:04:24,945 [ERROR] asyncio: Exception in callback _SelectorDatagramTransport._read_ready()
+handle: <Handle _SelectorDatagramTransport._read_ready()>
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 1249, in _read_ready
+    self._protocol.datagram_received(data, addr)
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 165, in datagram_received
+    self.parent_obj.announce_response = self.parent_obj.parse_udp_announce_res(data)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 122, in parse_udp_announce_res
+    raise ValueError("fail: parse udp announce response (< 20 bytes)")
+ValueError: fail: parse udp announce response (< 20 bytes)
+2026-03-28 11:04:54,929 [ERROR] asyncio: Exception in callback _SelectorDatagramTransport._read_ready()
+handle: <Handle _SelectorDatagramTransport._read_ready()>
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 1249, in _read_ready
+    self._protocol.datagram_received(data, addr)
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 165, in datagram_received
+    self.parent_obj.announce_response = self.parent_obj.parse_udp_announce_res(data)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 122, in parse_udp_announce_res
+    raise ValueError("fail: parse udp announce response (< 20 bytes)")
+ValueError: fail: parse udp announce response (< 20 bytes)
+2026-03-28 11:05:02,357 [WARNING] pytorrent.piece: Piece #502: Fetching blocks from Peer(('202.125.43.25', 30780)) failed (Returned None). Error: 'NoneType' object is not iterable
+2026-03-28 11:05:40,327 [WARNING] pytorrent.torrent: Torrent: Pruned 2 peers.
+2026-03-28 11:05:54,947 [ERROR] asyncio: Exception in callback _SelectorDatagramTransport._read_ready()
+handle: <Handle _SelectorDatagramTransport._read_ready()>
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 1249, in _read_ready
+    self._protocol.datagram_received(data, addr)
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 165, in datagram_received
+    self.parent_obj.announce_response = self.parent_obj.parse_udp_announce_res(data)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 122, in parse_udp_announce_res
+    raise ValueError("fail: parse udp announce response (< 20 bytes)")
+ValueError: fail: parse udp announce response (< 20 bytes)
+2026-03-28 11:06:36,841 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(9.rarbg.com:2810): [Errno -2] Name or service not known
+2026-03-28 11:06:36,867 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.tiny-vps.com:6969): [Errno -2] Name or service not known
+2026-03-28 11:06:36,868 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(retracker.lanta-net.ru:2710): [Errno -2] Name or service not known
+2026-03-28 11:06:36,878 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(retracker.netbynet.ru:2710): [Errno -2] Name or service not known
+2026-03-28 11:06:36,881 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.gbitt.info:80): [Errno -2] Name or service not known
+2026-03-28 11:06:36,939 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.openbittorrent.com:80): [Errno -2] Name or service not known
+2026-03-28 11:06:36,995 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.bitsearch.to:1337): [Errno -2] Name or service not known
+2026-03-28 11:06:37,357 [ERROR] pytorrent.core.trackers: Error fetching peers from HTTPTracker(tracker.opentrackr.org:1337): Error Code: 400 - Invalid Request
+2026-03-28 11:06:40,331 [WARNING] pytorrent.torrent: Torrent: Pruned 2 peers.
+2026-03-28 11:06:40,773 [WARNING] pytorrent.core.nat_traversal: NAT: UPnP và NAT-PMP đều thất bại. Client sẽ không nhận được kết nối vào nếu đứng sau NAT chặt.
+2026-03-28 11:06:40,773 [WARNING] pytorrent.torrent: NAT traversal failed — client sẽ không nhận được kết nối vào nếu port 6882 chưa được forward trên router.
+2026-03-28 11:07:40,335 [WARNING] pytorrent.torrent: Torrent: Pruned 1 peers.
+2026-03-28 11:07:54,895 [ERROR] asyncio: Exception in callback _SelectorDatagramTransport._read_ready()
+handle: <Handle _SelectorDatagramTransport._read_ready()>
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 1249, in _read_ready
+    self._protocol.datagram_received(data, addr)
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 165, in datagram_received
+    self.parent_obj.announce_response = self.parent_obj.parse_udp_announce_res(data)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 122, in parse_udp_announce_res
+    raise ValueError("fail: parse udp announce response (< 20 bytes)")
+ValueError: fail: parse udp announce response (< 20 bytes)
+2026-03-28 11:08:40,336 [WARNING] pytorrent.torrent: Torrent: Pruned 1 peers.
+2026-03-28 11:09:40,339 [WARNING] pytorrent.torrent: Torrent: Pruned 5 peers.
+2026-03-28 11:10:29,708 [WARNING] pytorrent.piece: Piece #712: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:30,381 [WARNING] pytorrent.piece: Piece #715: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:31,020 [WARNING] pytorrent.piece: Piece #717: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:31,341 [WARNING] pytorrent.piece: Piece #718: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:33,474 [WARNING] pytorrent.piece: Piece #719: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:33,685 [WARNING] pytorrent.piece: Piece #722: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:34,525 [WARNING] pytorrent.piece: Piece #723: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:34,750 [WARNING] pytorrent.piece: Piece #725: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:35,321 [WARNING] pytorrent.piece: Piece #726: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:36,858 [WARNING] pytorrent.piece: Piece #728: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:38,589 [WARNING] pytorrent.piece: Piece #729: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:39,605 [WARNING] pytorrent.piece: Piece #731: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:40,247 [WARNING] pytorrent.piece: Piece #733: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:40,344 [WARNING] pytorrent.torrent: Torrent: Pruned 6 peers.
+2026-03-28 11:10:40,952 [WARNING] pytorrent.piece: Piece #735: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:42,385 [WARNING] pytorrent.piece: Piece #736: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:43,318 [WARNING] pytorrent.piece: Piece #739: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:44,685 [WARNING] pytorrent.piece: Piece #741: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:45,598 [WARNING] pytorrent.piece: Piece #743: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:46,196 [WARNING] pytorrent.piece: Piece #745: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:46,658 [WARNING] pytorrent.piece: Piece #747: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:47,206 [WARNING] pytorrent.piece: Piece #749: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:48,035 [WARNING] pytorrent.piece: Piece #750: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:48,095 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=99, length=2029771117
+2026-03-28 11:10:48,096 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=147, length=2935324092
+2026-03-28 11:10:48,096 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=251, length=1105969936
+2026-03-28 11:10:48,096 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=207, length=1141574685
+2026-03-28 11:10:48,097 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=255, length=2155837147
+2026-03-28 11:10:48,097 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=197, length=374760252
+2026-03-28 11:10:48,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=83, length=3935039812
+2026-03-28 11:10:48,312 [WARNING] pytorrent.piece: Piece #753: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:48,336 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=197, length=3174904660
+2026-03-28 11:10:48,343 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=192, length=1497458533
+2026-03-28 11:10:48,361 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=127, length=2711684020
+2026-03-28 11:10:48,374 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=173, length=1173193805
+2026-03-28 11:10:48,374 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=3, length=2274721095
+2026-03-28 11:10:48,374 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=126, length=4070173370
+2026-03-28 11:10:48,374 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=214, length=3771166945
+2026-03-28 11:10:48,374 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=74, length=2132886292
+2026-03-28 11:10:48,382 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=107, length=4132845744
+2026-03-28 11:10:48,382 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=202, length=3259369290
+2026-03-28 11:10:48,382 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=150, length=3647249603
+2026-03-28 11:10:48,619 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=62, length=2245039392
+2026-03-28 11:10:48,620 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=83, length=3958358128
+2026-03-28 11:10:48,620 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=72, length=3967694737
+2026-03-28 11:10:48,627 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=90, length=1609372456
+2026-03-28 11:10:48,630 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=44, length=1649788342
+2026-03-28 11:10:48,630 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=167, length=1115885363
+2026-03-28 11:10:48,635 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=42, length=2108897778
+2026-03-28 11:10:48,639 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=122, length=3682600590
+2026-03-28 11:10:48,640 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=107, length=406992300
+2026-03-28 11:10:48,640 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=254, length=2903785791
+2026-03-28 11:10:48,642 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=22, length=793284290
+2026-03-28 11:10:48,642 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=18, length=807213729
+2026-03-28 11:10:48,687 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=208, length=237378612
+2026-03-28 11:10:48,914 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=124, length=1065355023
+2026-03-28 11:10:48,923 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=157, length=1383377645
+2026-03-28 11:10:48,923 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=130, length=2996883337
+2026-03-28 11:10:48,928 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=227, length=3987160827
+2026-03-28 11:10:48,928 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=118, length=1118347964
+2026-03-28 11:10:48,934 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=240, length=450423409
+2026-03-28 11:10:48,934 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=95, length=2134077012
+2026-03-28 11:10:48,934 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=59, length=55779247
+2026-03-28 11:10:48,937 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=181, length=179954370
+2026-03-28 11:10:48,940 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=106, length=1359196239
+2026-03-28 11:10:49,115 [WARNING] pytorrent.piece: Piece #755: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:49,217 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=158, length=454578414
+2026-03-28 11:10:49,226 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=37, length=2680444787
+2026-03-28 11:10:49,230 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=226, length=1266143350
+2026-03-28 11:10:49,230 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=98, length=3238951171
+2026-03-28 11:10:49,231 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=179, length=3026595733
+2026-03-28 11:10:49,237 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=152, length=3401358155
+2026-03-28 11:10:49,238 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=135, length=3475788629
+2026-03-28 11:10:49,238 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=94, length=2751456735
+2026-03-28 11:10:49,238 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=254, length=616116257
+2026-03-28 11:10:49,496 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=204, length=3587746835
+2026-03-28 11:10:49,519 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=243, length=3004987580
+2026-03-28 11:10:49,651 [WARNING] pytorrent.piece: Piece #758: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:49,720 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=226, length=2592913352
+2026-03-28 11:10:49,720 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=245, length=2474039410
+2026-03-28 11:10:49,720 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=44, length=3803132934
+2026-03-28 11:10:49,720 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=195, length=1832522415
+2026-03-28 11:10:49,720 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=221, length=715392555
+2026-03-28 11:10:49,721 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=232, length=1021465987
+2026-03-28 11:10:49,721 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=90, length=3580229868
+2026-03-28 11:10:49,721 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=153, length=1647500641
+2026-03-28 11:10:49,721 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=142, length=258133247
+2026-03-28 11:10:49,898 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=29, length=2297754276
+2026-03-28 11:10:49,898 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=32, length=978641760
+2026-03-28 11:10:49,898 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=166, length=2010776361
+2026-03-28 11:10:49,898 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=179, length=865529892
+2026-03-28 11:10:49,899 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=173, length=2526718329
+2026-03-28 11:10:49,899 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=51, length=1853767905
+2026-03-28 11:10:49,899 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=208, length=4222403095
+2026-03-28 11:10:49,899 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=88, length=3350386517
+2026-03-28 11:10:49,906 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=171, length=1019571011
+2026-03-28 11:10:49,907 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=231, length=2088177951
+2026-03-28 11:10:49,907 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=33, length=2684448340
+2026-03-28 11:10:49,907 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=143, length=20282991
+2026-03-28 11:10:49,908 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=170, length=2373830421
+2026-03-28 11:10:49,908 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=100, length=2753150963
+2026-03-28 11:10:49,908 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=43, length=2419097913
+2026-03-28 11:10:49,911 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=143, length=4104991455
+2026-03-28 11:10:49,911 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=165, length=2630633376
+2026-03-28 11:10:49,911 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=93, length=2557142286
+2026-03-28 11:10:50,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=114, length=761694658
+2026-03-28 11:10:50,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=175, length=3288854057
+2026-03-28 11:10:50,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=99, length=2786325613
+2026-03-28 11:10:50,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=121, length=2321489776
+2026-03-28 11:10:50,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=146, length=2762174250
+2026-03-28 11:10:50,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=77, length=1257463867
+2026-03-28 11:10:50,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=71, length=2375755999
+2026-03-28 11:10:50,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=69, length=1071146911
+2026-03-28 11:10:50,099 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=139, length=954678727
+2026-03-28 11:10:50,099 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=130, length=1246107171
+2026-03-28 11:10:50,099 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=20, length=1567469644
+2026-03-28 11:10:50,099 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=151, length=4152935651
+2026-03-28 11:10:50,099 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=226, length=142215091
+2026-03-28 11:10:50,099 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=220, length=1824200082
+2026-03-28 11:10:50,175 [WARNING] pytorrent.piece: Piece #760: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:50,270 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=94, length=2375976012
+2026-03-28 11:10:50,270 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=106, length=3517847275
+2026-03-28 11:10:50,301 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=207, length=520762304
+2026-03-28 11:10:50,302 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=202, length=1851269146
+2026-03-28 11:10:50,302 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=202, length=2920686023
+2026-03-28 11:10:50,302 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=183, length=3909892653
+2026-03-28 11:10:50,302 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=179, length=3903415114
+2026-03-28 11:10:50,716 [WARNING] pytorrent.piece: Piece #762: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:51,188 [WARNING] pytorrent.piece: Piece #763: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:51,482 [WARNING] pytorrent.core.pwp_response_handler: PeerResponseHandler: artifacts did not shrink (['handshake']), breaking
+2026-03-28 11:10:51,740 [WARNING] pytorrent.piece: Piece #766: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:51,792 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=155, length=2920725305
+2026-03-28 11:10:51,792 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=88, length=4294230959
+2026-03-28 11:10:51,792 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=123, length=925687203
+2026-03-28 11:10:51,792 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=56, length=79897944
+2026-03-28 11:10:51,792 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=108, length=2563280221
+2026-03-28 11:10:52,189 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=161, length=1882290109
+2026-03-28 11:10:52,189 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=57, length=2888924745
+2026-03-28 11:10:52,443 [WARNING] pytorrent.core.pwp_response_handler: PeerResponseHandler: artifacts did not shrink (['handshake']), breaking
+2026-03-28 11:10:52,749 [WARNING] pytorrent.piece: Piece #768: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:52,969 [WARNING] pytorrent.piece: Piece #771: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:53,373 [WARNING] pytorrent.piece: Piece #772: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:53,817 [WARNING] pytorrent.piece: Piece #773: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:54,063 [WARNING] pytorrent.piece: Piece #774: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:54,288 [WARNING] pytorrent.piece: Piece #775: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:55,253 [WARNING] pytorrent.piece: Piece #776: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:55,619 [WARNING] pytorrent.piece: Piece #779: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:55,689 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=189, length=90112161
+2026-03-28 11:10:55,867 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=118, length=2938072707
+2026-03-28 11:10:56,403 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=105, length=3237214809
+2026-03-28 11:10:56,403 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=238, length=1062015695
+2026-03-28 11:10:56,618 [WARNING] pytorrent.piece: Piece #780: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:56,707 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=202, length=4023277618
+2026-03-28 11:10:56,707 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=241, length=2949358570
+2026-03-28 11:10:56,708 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=3, length=303686508
+2026-03-28 11:10:56,708 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=175, length=2104571869
+2026-03-28 11:10:56,944 [WARNING] pytorrent.piece: Piece #783: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:57,014 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=243, length=2464468446
+2026-03-28 11:10:57,014 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=36, length=1804444307
+2026-03-28 11:10:57,035 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=57, length=3375115838
+2026-03-28 11:10:57,609 [WARNING] pytorrent.piece: Piece #784: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:57,688 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=65, length=3764018146
+2026-03-28 11:10:57,689 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=89, length=4003908691
+2026-03-28 11:10:57,689 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=12, length=3464581190
+2026-03-28 11:10:57,689 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=146, length=3632119699
+2026-03-28 11:10:57,689 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=238, length=2434807660
+2026-03-28 11:10:57,689 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=162, length=82179944
+2026-03-28 11:10:57,922 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=78, length=3809963061
+2026-03-28 11:10:57,922 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=109, length=3847885299
+2026-03-28 11:10:57,923 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=162, length=718947040
+2026-03-28 11:10:57,923 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=11, length=1702230672
+2026-03-28 11:10:58,067 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=245, length=2207786878
+2026-03-28 11:10:58,068 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=199, length=84391882
+2026-03-28 11:10:58,068 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=213, length=1280659069
+2026-03-28 11:10:58,068 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=130, length=111346096
+2026-03-28 11:10:58,068 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=127, length=3108048292
+2026-03-28 11:10:58,068 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=89, length=2209897877
+2026-03-28 11:10:58,069 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=40, length=2039506267
+2026-03-28 11:10:58,069 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=210, length=3557871724
+2026-03-28 11:10:58,069 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=218, length=1365959592
+2026-03-28 11:10:58,069 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=223, length=154072879
+2026-03-28 11:10:58,070 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=148, length=1198074134
+2026-03-28 11:10:58,070 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=98, length=2994227938
+2026-03-28 11:10:58,070 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=74, length=675624186
+2026-03-28 11:10:58,073 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=230, length=516546317
+2026-03-28 11:10:58,073 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=10, length=2987701200
+2026-03-28 11:10:58,079 [WARNING] pytorrent.piece: Piece #787: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:58,670 [WARNING] pytorrent.piece: Piece #247: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:58,842 [WARNING] pytorrent.piece: Piece #336: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:59,144 [WARNING] pytorrent.piece: Piece #593: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:59,358 [WARNING] pytorrent.piece: Piece #683: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:59,407 [WARNING] pytorrent.piece: Piece #712: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:59,875 [WARNING] pytorrent.piece: Piece #715: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:10:59,917 [WARNING] pytorrent.piece: Piece #718: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:00,130 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=197, length=554266972
+2026-03-28 11:11:00,131 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=111, length=2129227441
+2026-03-28 11:11:00,204 [WARNING] pytorrent.piece: Piece #719: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:00,331 [WARNING] pytorrent.piece: Piece #723: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:00,613 [WARNING] pytorrent.piece: Piece #725: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:00,630 [WARNING] pytorrent.piece: Piece #726: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:00,783 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=87, length=3485770311
+2026-03-28 11:11:01,386 [WARNING] pytorrent.piece: Piece #729: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:01,386 [WARNING] pytorrent.piece: Piece #734: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:01,611 [WARNING] pytorrent.piece: Piece #733: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:01,826 [WARNING] pytorrent.piece: Piece #735: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:02,362 [WARNING] pytorrent.piece: Piece #739: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:02,367 [WARNING] pytorrent.piece: Piece #743: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:02,645 [WARNING] pytorrent.piece: Piece #745: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:02,936 [WARNING] pytorrent.piece: Piece #747: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:02,941 [WARNING] pytorrent.piece: Piece #749: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:03,294 [WARNING] pytorrent.piece: Piece #750: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:04,325 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=224, length=1427100629
+2026-03-28 11:11:04,386 [WARNING] pytorrent.piece: Piece #755: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:04,390 [WARNING] pytorrent.piece: Piece #763: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:04,659 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=228, length=3317175802
+2026-03-28 11:11:04,659 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=72, length=1063616568
+2026-03-28 11:11:04,659 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=235, length=2110138223
+2026-03-28 11:11:04,659 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=191, length=3131569425
+2026-03-28 11:11:04,659 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=196, length=1545586760
+2026-03-28 11:11:04,659 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=250, length=3868754488
+2026-03-28 11:11:04,659 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=95, length=2425164090
+2026-03-28 11:11:04,659 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=204, length=3955997056
+2026-03-28 11:11:04,659 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=16, length=2120195438
+2026-03-28 11:11:04,660 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=12, length=3316009863
+2026-03-28 11:11:04,660 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=212, length=1342026221
+2026-03-28 11:11:04,660 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=111, length=969839627
+2026-03-28 11:11:04,660 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=12, length=286194889
+2026-03-28 11:11:04,671 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=129, length=1829396899
+2026-03-28 11:11:04,671 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=119, length=1460137408
+2026-03-28 11:11:04,693 [WARNING] pytorrent.piece: Piece #766: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:04,919 [WARNING] pytorrent.piece: Piece #768: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:04,922 [WARNING] pytorrent.piece: Piece #772: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:05,139 [WARNING] pytorrent.piece: Piece #773: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:05,149 [WARNING] pytorrent.piece: Piece #775: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:05,871 [WARNING] pytorrent.piece: Piece #776: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:05,897 [WARNING] pytorrent.piece: Piece #780: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:06,047 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=189, length=985995887
+2026-03-28 11:11:06,048 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=239, length=363799970
+2026-03-28 11:11:06,055 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=69, length=3080698918
+2026-03-28 11:11:06,055 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=196, length=1766615019
+2026-03-28 11:11:06,056 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=3, length=2198436690
+2026-03-28 11:11:06,090 [WARNING] pytorrent.piece: Piece #783: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:06,114 [WARNING] pytorrent.piece: Piece #787: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:07,311 [WARNING] pytorrent.piece: Piece #247: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:07,319 [WARNING] pytorrent.piece: Piece #683: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:07,779 [WARNING] pytorrent.piece: Piece #712: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:07,816 [WARNING] pytorrent.piece: Piece #718: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:08,030 [WARNING] pytorrent.piece: Piece #719: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:08,094 [WARNING] pytorrent.piece: Piece #725: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:08,329 [WARNING] pytorrent.piece: Piece #726: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:08,524 [WARNING] pytorrent.piece: Piece #734: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:08,551 [WARNING] pytorrent.piece: Piece #733: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:08,922 [WARNING] pytorrent.piece: Piece #735: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:08,925 [WARNING] pytorrent.piece: Piece #743: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:09,022 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=103, length=3709969819
+2026-03-28 11:11:09,142 [WARNING] pytorrent.piece: Piece #745: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:09,167 [WARNING] pytorrent.piece: Piece #747: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:09,386 [WARNING] pytorrent.piece: Piece #749: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:10,478 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=231, length=521962166
+2026-03-28 11:11:10,478 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=233, length=3958614173
+2026-03-28 11:11:10,479 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=222, length=1322702049
+2026-03-28 11:11:10,479 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=142, length=2726374092
+2026-03-28 11:11:10,479 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=35, length=1509688443
+2026-03-28 11:11:10,479 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=201, length=1273730261
+2026-03-28 11:11:10,479 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=137, length=3080443334
+2026-03-28 11:11:10,681 [WARNING] pytorrent.piece: Piece #750: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:10,692 [WARNING] pytorrent.piece: Piece #768: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:10,825 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=162, length=1565898337
+2026-03-28 11:11:10,834 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=155, length=1475218115
+2026-03-28 11:11:10,834 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=63, length=3095084981
+2026-03-28 11:11:10,834 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=250, length=2406285297
+2026-03-28 11:11:10,938 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=94, length=1317739725
+2026-03-28 11:11:10,939 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=151, length=2384474966
+2026-03-28 11:11:10,940 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=31, length=2893585885
+2026-03-28 11:11:11,122 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=39, length=3595486800
+2026-03-28 11:11:11,122 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=125, length=1146837719
+2026-03-28 11:11:11,122 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=104, length=392743420
+2026-03-28 11:11:11,122 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=61, length=1431301041
+2026-03-28 11:11:11,123 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=155, length=1181924800
+2026-03-28 11:11:11,123 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=94, length=3993427839
+2026-03-28 11:11:11,501 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=33, length=2250146416
+2026-03-28 11:11:11,502 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=134, length=3258178254
+2026-03-28 11:11:11,502 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=236, length=3122119782
+2026-03-28 11:11:11,708 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=234, length=4030174327
+2026-03-28 11:11:11,708 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=49, length=997305396
+2026-03-28 11:11:11,711 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=90, length=1612496481
+2026-03-28 11:11:11,714 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=246, length=3007934008
+2026-03-28 11:11:11,714 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=186, length=3541268955
+2026-03-28 11:11:11,760 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=134, length=3480897935
+2026-03-28 11:11:11,960 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=58, length=3327299772
+2026-03-28 11:11:11,978 [WARNING] pytorrent.piece: Piece #772: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:11,985 [WARNING] pytorrent.piece: Piece #780: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:12,136 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=83, length=707657060
+2026-03-28 11:11:12,209 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=228, length=4098457798
+2026-03-28 11:11:12,381 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=116, length=748026007
+2026-03-28 11:11:12,381 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=139, length=2606750558
+2026-03-28 11:11:12,457 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=13, length=4015369883
+2026-03-28 11:11:12,457 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=166, length=1087667046
+2026-03-28 11:11:12,556 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=234, length=3206247512
+2026-03-28 11:11:12,556 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=18, length=3015982162
+2026-03-28 11:11:12,654 [WARNING] pytorrent.piece: Piece #783: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:12,682 [WARNING] pytorrent.piece: Piece #247: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:12,683 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=196, length=3254873893
+2026-03-28 11:11:12,683 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=180, length=772780574
+2026-03-28 11:11:12,823 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=78, length=530036887
+2026-03-28 11:11:12,832 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=222, length=3876593494
+2026-03-28 11:11:12,913 [WARNING] pytorrent.piece: Piece #683: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:12,945 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=177, length=3383107373
+2026-03-28 11:11:12,945 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=99, length=2934338863
+2026-03-28 11:11:12,946 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=231, length=414863656
+2026-03-28 11:11:13,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=12, length=3323379488
+2026-03-28 11:11:13,098 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=194, length=1803177166
+2026-03-28 11:11:13,157 [WARNING] pytorrent.piece: Piece #718: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:13,222 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=80, length=446565138
+2026-03-28 11:11:13,227 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=177, length=3589999392
+2026-03-28 11:11:13,337 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=123, length=881587127
+2026-03-28 11:11:13,339 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=40, length=3690246723
+2026-03-28 11:11:13,340 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=154, length=1577081506
+2026-03-28 11:11:13,342 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=130, length=3829178772
+2026-03-28 11:11:13,342 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=13, length=3191465548
+2026-03-28 11:11:13,477 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=95, length=847880881
+2026-03-28 11:11:13,477 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=164, length=2078301857
+2026-03-28 11:11:13,478 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=30, length=2179453325
+2026-03-28 11:11:14,031 [WARNING] pytorrent.piece: Piece #719: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:14,035 [WARNING] pytorrent.piece: Piece #734: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:14,284 [WARNING] pytorrent.piece: Piece #733: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:14,295 [WARNING] pytorrent.piece: Piece #743: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:14,427 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=73, length=1537262259
+2026-03-28 11:11:14,428 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=232, length=3503017869
+2026-03-28 11:11:14,428 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=114, length=2217448696
+2026-03-28 11:11:14,430 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=29, length=551575660
+2026-03-28 11:11:14,430 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=134, length=1130532000
+2026-03-28 11:11:14,434 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=170, length=3546321638
+2026-03-28 11:11:14,525 [WARNING] pytorrent.piece: Piece #745: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:15,057 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=254, length=3063289717
+2026-03-28 11:11:15,057 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=96, length=3030701280
+2026-03-28 11:11:15,058 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=226, length=759652981
+2026-03-28 11:11:15,058 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=74, length=151970214
+2026-03-28 11:11:15,061 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=207, length=2893248233
+2026-03-28 11:11:15,061 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=189, length=3466912670
+2026-03-28 11:11:15,067 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=246, length=2867962607
+2026-03-28 11:11:15,168 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=106, length=348845677
+2026-03-28 11:11:15,168 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=8, length=4028501710
+2026-03-28 11:11:15,391 [WARNING] pytorrent.piece: Piece #747: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:15,417 [WARNING] pytorrent.piece: Piece #750: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:15,563 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=15, length=3403343146
+2026-03-28 11:11:15,564 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=100, length=2656177817
+2026-03-28 11:11:15,564 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=187, length=1824837845
+2026-03-28 11:11:15,564 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=56, length=3419095532
+2026-03-28 11:11:15,565 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=37, length=651874659
+2026-03-28 11:11:15,575 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=113, length=1866192896
+2026-03-28 11:11:15,575 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=32, length=576596923
+2026-03-28 11:11:15,575 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=190, length=3191465347
+2026-03-28 11:11:15,575 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=102, length=2277104704
+2026-03-28 11:11:15,576 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=223, length=1695025917
+2026-03-28 11:11:15,576 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=139, length=3677520123
+2026-03-28 11:11:15,576 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=84, length=216405176
+2026-03-28 11:11:15,577 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=127, length=2855877396
+2026-03-28 11:11:15,577 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=94, length=3715640154
+2026-03-28 11:11:15,623 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=134, length=2661720222
+2026-03-28 11:11:15,623 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=90, length=3354674200
+2026-03-28 11:11:15,637 [WARNING] pytorrent.piece: Piece #768: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:15,680 [WARNING] pytorrent.piece: Piece #780: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:15,884 [WARNING] pytorrent.piece: Piece #783: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:15,902 [WARNING] pytorrent.piece: Piece #683: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:16,169 [WARNING] pytorrent.piece: Piece #718: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:16,190 [WARNING] pytorrent.piece: Piece #719: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:16,444 [WARNING] pytorrent.piece: Piece #734: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:16,450 [WARNING] pytorrent.piece: Piece #743: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:16,546 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=69, length=2653410600
+2026-03-28 11:11:16,573 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=143, length=1501469349
+2026-03-28 11:11:16,573 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=79, length=2625160762
+2026-03-28 11:11:16,574 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=102, length=4081189482
+2026-03-28 11:11:16,574 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=155, length=3683096558
+2026-03-28 11:11:16,574 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=174, length=3456039796
+2026-03-28 11:11:16,574 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=244, length=2288375723
+2026-03-28 11:11:16,587 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=84, length=2064999104
+2026-03-28 11:11:16,587 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=114, length=3308124749
+2026-03-28 11:11:16,587 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=230, length=147655163
+2026-03-28 11:11:16,943 [WARNING] pytorrent.piece: Piece #745: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:16,952 [WARNING] pytorrent.piece: Piece #750: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:17,050 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: Unhandled message_id=202, length=2691644019
+2026-03-28 11:11:17,053 [WARNING] pytorrent.core.pwp_response_handler: PeerResponseHandler: artifacts did not shrink (['handshake']), breaking
+2026-03-28 11:11:17,378 [WARNING] pytorrent.piece: Piece #768: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:17,630 [WARNING] pytorrent.piece: Piece #783: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:17,640 [WARNING] pytorrent.piece: Piece #718: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:17,877 [WARNING] pytorrent.piece: Piece #719: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:18,182 [WARNING] pytorrent.piece: Piece #734: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:18,322 [WARNING] pytorrent.piece: Piece #745: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:19,423 [WARNING] pytorrent.piece: Piece #750: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:19,432 [WARNING] pytorrent.piece: Piece #719: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:20,726 [WARNING] pytorrent.piece: Piece #734: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:20,735 [WARNING] pytorrent.piece: Piece #719: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:21,785 [WARNING] pytorrent.piece: Piece #734: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:40,240 [WARNING] pytorrent.piece: Piece #2: SHA-1 hash validation failed. Dropping piece.
+2026-03-28 11:11:40,347 [WARNING] pytorrent.torrent: Torrent: Pruned 1 peers.
+2026-03-28 11:11:54,916 [ERROR] asyncio: Exception in callback _SelectorDatagramTransport._read_ready()
+handle: <Handle _SelectorDatagramTransport._read_ready()>
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 1249, in _read_ready
+    self._protocol.datagram_received(data, addr)
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 165, in datagram_received
+    self.parent_obj.announce_response = self.parent_obj.parse_udp_announce_res(data)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/a/Desktop/bClient/pytorrent/core/trackers.py", line 122, in parse_udp_announce_res
+    raise ValueError("fail: parse udp announce response (< 20 bytes)")
+ValueError: fail: parse udp announce response (< 20 bytes)
+2026-03-28 11:12:10,235 [WARNING] pytorrent.torrent: Torrent: Pruned 1 peers.
+2026-03-28 11:12:40,348 [WARNING] pytorrent.torrent: Torrent: Pruned 1 peers.
