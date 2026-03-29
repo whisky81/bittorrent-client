@@ -99,7 +99,7 @@ def open_folder(path: str) -> tuple[bool, str]:
     system = platform.system()
     try:
         if system == "Windows":
-            os.startfile(str(folder)) # type: ignore
+            os.startfile(str(folder))
         elif system == "Darwin":
             subprocess.Popen(["open", str(folder)])
         else:
@@ -544,5 +544,49 @@ def delete_torrent(info_hash):
 
 
 if __name__ == "__main__":
-    print("Running on http://127.0.0.1:5000")
     app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+    print("Running on http://127.0.0.1:5000")
+
+# ── Port reachability check ────────────────────────────────────────────────────
+@app.route("/api/nat-status", methods=["GET"])
+def get_nat_status():
+    """
+    Trả về trạng thái NAT chi tiết cho tất cả active torrents.
+    Bao gồm: method, external_ip, external_port, active, message giải thích.
+    """
+    statuses = {}
+    for info_hash, torrent in list(active_torrents.items()):
+        if not hasattr(torrent, "get_nat_status"):
+            continue
+        st = torrent.get_nat_status()
+        active = st.get("active", False)
+        method = st.get("method")
+        ext_ip = st.get("external_ip")
+        ext_port = st.get("external_port")
+        local_port = st.get("internal_port", torrent.port if hasattr(torrent, "port") else 0)
+
+        if active and ext_ip:
+            msg = (
+                f"Port {ext_port} đã được map trên router via {(method or '').upper()}. "
+                f"Peers bên ngoài kết nối tới {ext_ip}:{ext_port}."
+            )
+            level = "ok"
+        else:
+            msg = (
+                f"Chưa có NAT mapping. Port {local_port} chưa được forward trên router. "
+                f"Peers bên ngoài KHÔNG thể kết nối vào → uploaded sẽ = 0 trừ khi bạn "
+                f"forward port thủ công trong router settings."
+            )
+            level = "warn"
+
+        statuses[info_hash] = {
+            "active":       active,
+            "method":       method,
+            "external_ip":  ext_ip,
+            "external_port":ext_port,
+            "local_port":   local_port,
+            "level":        level,
+            "message":      msg,
+        }
+
+    return jsonify(statuses)

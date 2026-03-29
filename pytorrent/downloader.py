@@ -8,11 +8,30 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-END_GAME_THRESHOLD = 4
-
-# BUG FIX: Số lần SHA-1 failure từ một peer trước khi bị penalize nặng
+END_GAME_THRESHOLD      = 4
 _HASH_FAIL_PENALIZE_AFTER = 2
-_HASH_FAIL_PRIORITY_BUMP  = 20   # Tăng priority (= giảm ưu tiên) nhiều để tránh peer xấu
+_HASH_FAIL_PRIORITY_BUMP  = 20
+
+
+def _slice_piece_for_file(piece_data: bytes, piece_num: int, file: File) -> bytes:
+    """
+    Trích đúng phần bytes của piece_data thuộc về file.
+
+    BUG FIX: Áp dụng start và end trên CÙNG MỘT object gốc.
+    Code cũ làm tuần tự:
+        1) piece_data = piece_data[start_byte:]
+        2) piece_data = piece_data[:end_byte]      ← end_byte là vị trí tuyệt đối
+                                                       trong piece GỐC, không phải
+                                                       trong slice sau bước 1!
+    Nếu start_piece == end_piece (file nằm trong một piece duy nhất), bước 2
+    lấy thừa dữ liệu, ghi sai sang file, khiến các piece tiếp theo luôn
+    fail SHA-1 vì offset nội bộ bị lệch.
+
+    Fix: tính s và e từ piece_data gốc, slice một lần duy nhất.
+    """
+    s = file.start_byte if file.start_piece == piece_num else 0
+    e = file.end_byte   if file.end_piece   == piece_num else len(piece_data)
+    return piece_data[s:e]
 
 
 class FilesDownloadManager:
@@ -31,18 +50,16 @@ class FilesDownloadManager:
         self.piece_info = {
             "total_pieces": total_pieces,
             "total_blocks": total_blocks,
-            "last_piece":   last_piece,
+            "last_piece":   last_piece if last_piece else piece_size,  # BUG FIX: 0 → full piece
             "last_block":   last_block,
-            "piece_length": torrent_info["piece_length"],
+            "piece_length": piece_size,
         }
 
         self.piece_hashmap    = torrent_info["piece_hashes"]
         self.file_tree        = FileTree(torrent_info)
         self.completed_pieces: dict[int, bytes] = {}
         self.active_peers     = list(active_peers)
-
-        # BUG FIX: Đếm hash failures per peer để penalize peer xấu
-        self._peer_hash_fails: dict[int, int] = {}   # id(peer) → fail count
+        self._peer_hash_fails: dict[int, int] = {}
 
         self.file_pieces: asyncio.PriorityQueue = asyncio.PriorityQueue()
         self.peer_queue:  asyncio.PriorityQueue = asyncio.PriorityQueue()
@@ -72,8 +89,7 @@ class FilesDownloadManager:
         result = []
         for pn in piece_nums:
             c = count.get(pn, 0)
-            prio = c if c > 0 else 9999
-            result.append((prio, pn))
+            result.append((c if c > 0 else 9999, pn))
         result.sort()
         return result
 
@@ -126,9 +142,7 @@ class FilesDownloadManager:
                 except Exception:
                     continue
                 pn = piece.num
-                if pn not in piece_tasks:
-                    continue
-                if not Piece.is_valid(piece, self.piece_hashmap):
+                if pn not in piece_tasks or not Piece.is_valid(piece, self.piece_hashmap):
                     continue
                 for sibling in piece_tasks.pop(pn, []):
                     if sibling != task and not sibling.done():
@@ -149,23 +163,21 @@ class FilesDownloadManager:
         self.create_pieces_queue(file)
         pending_tasks: set[asyncio.Task] = set()
 
-        # Yield cached pieces
+        # ── Yield cached pieces immediately ───────────────────────────────────
         for piece_num in range(file.start_piece, file.end_piece + 1):
             if piece_num in self.completed_pieces:
                 piece = Piece(piece_num, 1, self.piece_info)
-                piece_data = self.completed_pieces[piece_num]
-                if file.start_piece == piece_num:
-                    piece_data = piece_data[file.start_byte:]
-                if file.end_piece == piece_num:
-                    piece_data = piece_data[:file.end_byte]
-                piece.data = piece_data
+                # BUG FIX: use _slice_piece_for_file for correct slicing
+                piece.data = _slice_piece_for_file(
+                    self.completed_pieces[piece_num], piece_num, file
+                )
                 file._set_bytes_written(file.get_bytes_written() + len(piece.data))
                 yield piece
 
+        # ── Normal download loop ───────────────────────────────────────────────
         while not self.file_downloaded():
             remaining = self.file_pieces.qsize()
 
-            # End-Game
             if remaining <= END_GAME_THRESHOLD and not pending_tasks:
                 rem_pieces: list[int] = []
                 while not self.file_pieces.empty():
@@ -175,12 +187,8 @@ class FilesDownloadManager:
                 if rem_pieces:
                     for piece in await self._end_game_download(rem_pieces):
                         self._finalize(piece)
-                        piece_data = piece.data
-                        if file.start_piece == piece.num:
-                            piece_data = piece_data[file.start_byte:]
-                        if file.end_piece == piece.num:
-                            piece_data = piece_data[:file.end_byte]
-                        piece.data = piece_data
+                        # BUG FIX: use helper
+                        piece.data = _slice_piece_for_file(piece.data, piece.num, file)
                         file._set_bytes_written(file.get_bytes_written() + len(piece.data))
                         yield piece
                 break
@@ -192,6 +200,7 @@ class FilesDownloadManager:
             piece = Piece(num, prio_piece, self.piece_info)
             pending_tasks.add(asyncio.create_task(piece.download(self.peer_queue)))
 
+        # ── Collect remaining pending tasks ────────────────────────────────────
         while pending_tasks:
             done, pending_tasks = await asyncio.wait(
                 pending_tasks, return_when=asyncio.FIRST_COMPLETED
@@ -200,43 +209,33 @@ class FilesDownloadManager:
                 piece = await task
 
                 if not Piece.is_valid(piece, self.piece_hashmap):
-                    # BUG FIX: Penalize peer gây hash failure.
-                    # Log cho thấy cùng piece (#712, #719...) fail nhiều lần liên tiếp
-                    # vì peer xấu được tái sử dụng. Bây giờ ta tăng priority của peer đó
-                    # (số lớn hơn = ít được chọn hơn) sau N lần failure.
+                    # Penalize peer that delivered bad data
                     bad_peer = getattr(piece, '_last_peer', None)
                     if bad_peer is not None:
                         pid = id(bad_peer)
                         self._peer_hash_fails[pid] = self._peer_hash_fails.get(pid, 0) + 1
-                        fail_count = self._peer_hash_fails[pid]
-                        if fail_count >= _HASH_FAIL_PENALIZE_AFTER:
+                        if self._peer_hash_fails[pid] >= _HASH_FAIL_PENALIZE_AFTER:
                             logger.warning(
-                                f"Downloader: {bad_peer} caused {fail_count} hash failures "
-                                f"— penalizing (priority bump +{_HASH_FAIL_PRIORITY_BUMP})"
+                                f"Downloader: {bad_peer} caused "
+                                f"{self._peer_hash_fails[pid]} hash failures — penalizing"
                             )
-                            # Đưa peer vào queue với priority rất thấp
                             self.peer_queue.put_nowait((_HASH_FAIL_PRIORITY_BUMP, bad_peer))
-
                     new_piece = Piece(piece.num, 1, self.piece_info)
-                    pending_tasks.add(
-                        asyncio.create_task(new_piece.download(self.peer_queue))
-                    )
+                    pending_tasks.add(asyncio.create_task(new_piece.download(self.peer_queue)))
                     continue
 
+                # Store full piece BEFORE slicing
                 self._finalize(piece)
-                piece_data = piece.data
-                if file.start_piece == piece.num:
-                    piece_data = piece_data[file.start_byte:]
-                if file.end_piece == piece.num:
-                    piece_data = piece_data[:file.end_byte]
-                piece.data = piece_data
+                # BUG FIX: slice correctly using original data
+                piece.data = _slice_piece_for_file(piece.data, piece.num, file)
                 file._set_bytes_written(file.get_bytes_written() + len(piece.data))
                 yield piece
 
         logger.info(f"File {file.name} downloaded completely.")
 
     def _finalize(self, piece: Piece) -> None:
-        self.completed_pieces[piece.num] = piece.data
+        """Store full piece data in cache and update global stats."""
+        self.completed_pieces[piece.num] = piece.data   # full piece, before any slicing
         self.torrent_info["downloaded"] = (
             self.torrent_info.get("downloaded", 0) + len(piece.data)
         )

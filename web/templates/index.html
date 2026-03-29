@@ -531,21 +531,31 @@ function buildNatRow(nat) {
     if (!nat) return '';
     const active = nat.active;
     const method = nat.method ? nat.method.toUpperCase() : null;
-    let badge, info;
+
+    let badge, info, tip;
     if (active && method) {
         badge = `<span style="background:rgba(48,209,88,.12);color:var(--green);font-size:10px;
-                   padding:1px 6px;border-radius:3px;font-weight:500;">${method}</span>`;
+                   padding:1px 6px;border-radius:3px;font-weight:500;">✓ ${method}</span>`;
         info  = `${nat.external_ip || '?'}:${nat.external_port || '?'}`;
+        tip   = `Port ${nat.external_port} mở via ${method} — peers bên ngoài có thể kết nối vào, seeding hoạt động.`;
     } else {
-        badge = `<span style="background:rgba(255,159,10,.12);color:var(--orange);font-size:10px;
-                   padding:1px 6px;border-radius:3px;font-weight:500;">No mapping</span>`;
-        info  = `Port ${nat.external_port || '?'} (manual forward needed)`;
+        badge = `<span style="background:rgba(255,69,58,.12);color:var(--red);font-size:10px;
+                   padding:1px 6px;border-radius:3px;font-weight:500;">✗ No mapping</span>`;
+        info  = `Port ${nat.external_port || '?'}`;
+        tip   = `⚠ Chưa forward port: peers bên ngoài KHÔNG kết nối được vào → Uploaded = 0.\n` +
+                `Giải pháp: Bật UPnP/PCP trong router, hoặc forward port ${nat.external_port||'?'} TCP thủ công.`;
     }
-    return `<div class="gen-item"><span class="gen-lbl">NAT</span>
-                <span class="gen-val" style="display:flex;align-items:center;gap:6px">
+    return `<div class="gen-item" style="flex-direction:column;gap:3px">
+                <span class="gen-lbl">NAT / Port</span>
+                <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                     ${badge}
-                    <span style="font-size:11px;color:var(--text-muted)">${info}</span>
+                    <span style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:${active?'var(--text-dim)':'var(--red)'}">${info}</span>
+                    <span style="font-size:10px;color:var(--text-muted);cursor:help" title="${tip}">ⓘ</span>
                 </span>
+                ${active ? '' : `<div style="font-size:10.5px;color:var(--orange);margin-top:2px;line-height:1.5">
+                    Uploaded luôn = 0 khi không có incoming connections.<br>
+                    Bật UPnP/PCP trong router, hoặc forward port ${nat.external_port||'?'} TCP thủ công.
+                </div>`}
             </div>`;
 }
 
