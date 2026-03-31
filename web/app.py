@@ -99,7 +99,9 @@ def open_folder(path: str) -> tuple[bool, str]:
     system = platform.system()
     try:
         if system == "Windows":
-            os.startfile(str(folder))
+            normalized_path = os.path.normpath(str(folder))
+            subprocess.Popen(["explorer", normalized_path])
+            # os.startfile(str(folder))
         elif system == "Darwin":
             subprocess.Popen(["open", str(folder)])
         else:
@@ -544,8 +546,8 @@ def delete_torrent(info_hash):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
     print("Running on http://127.0.0.1:5000")
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
 
 # ── Port reachability check ────────────────────────────────────────────────────
 @app.route("/api/nat-status", methods=["GET"])
