@@ -10,3 +10,6 @@ notes.txt
 Blockchain - An Illustrated Guidebook To Understand Blockchain
 data
 downloads
+.pytest_cache
+tests
+implementation_plan.md
