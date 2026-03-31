@@ -1,0 +1,12 @@
+2026-03-31 08:34:40,430 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(9.rarbg.com:2810): [Errno -2] Name or service not known
+2026-03-31 08:34:40,433 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(retracker.lanta-net.ru:2710): [Errno -2] Name or service not known
+2026-03-31 08:34:40,434 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(retracker.netbynet.ru:2710): [Errno -2] Name or service not known
+2026-03-31 08:34:40,447 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.bitsearch.to:1337): [Errno -2] Name or service not known
+2026-03-31 08:34:40,472 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.tiny-vps.com:6969): [Errno -2] Name or service not known
+2026-03-31 08:34:42,520 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.gbitt.info:80): [Errno -2] Name or service not known
+2026-03-31 08:34:43,387 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.openbittorrent.com:80): 
+2026-03-31 08:34:43,396 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.opentrackr.org:1337): 
+2026-03-31 08:34:44,396 [WARNING] pytorrent.core.nat_traversal: NAT: UPnP và PCP đều thất bại. Kết nối vào chỉ hoạt động nếu đã forward port thủ công.
+2026-03-31 08:34:44,397 [WARNING] pytorrent.torrent: NAT traversal failed — client sẽ không nhận được kết nối vào nếu port 6881 chưa được forward trên router.
+2026-03-31 08:34:45,015 [ERROR] pytorrent.core.trackers: Error fetching peers from HTTPTracker(tracker.opentrackr.org:1337): Error Code: 400 - Invalid Request
+2026-03-31 08:35:12,286 [WARNING] pytorrent.torrent:   No NAT mapping active. Seeder not reachable from outside unless port 6881 is manually forwarded.
