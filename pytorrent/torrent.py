@@ -303,7 +303,8 @@ class Torrent:
         if not self.trackers:
             for tracker_addr in self.torrent_info["trackers"]:
                 tracker = TrackerFactory(tracker_addr, self.torrent_info)
-                self.trackers.append(tracker)
+                if tracker:
+                    self.trackers.append(tracker)
 
         tasks = [asyncio.create_task(t.get_peers()) for t in self.trackers]
         await asyncio.wait(tasks, timeout=20)

@@ -9,4 +9,6 @@ class TrackerFactory:
             'https': HTTPTracker
         }
         scheme = urlparse(tracker_addr).scheme
-        return tracker_types[scheme](tracker_addr, torrent_info)
+        if scheme in tracker_types:
+            return tracker_types[scheme](tracker_addr, torrent_info)
+        return None

@@ -1,12 +1,82 @@
-2026-03-31 08:34:40,430 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(9.rarbg.com:2810): [Errno -2] Name or service not known
-2026-03-31 08:34:40,433 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(retracker.lanta-net.ru:2710): [Errno -2] Name or service not known
-2026-03-31 08:34:40,434 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(retracker.netbynet.ru:2710): [Errno -2] Name or service not known
-2026-03-31 08:34:40,447 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.bitsearch.to:1337): [Errno -2] Name or service not known
-2026-03-31 08:34:40,472 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.tiny-vps.com:6969): [Errno -2] Name or service not known
-2026-03-31 08:34:42,520 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.gbitt.info:80): [Errno -2] Name or service not known
-2026-03-31 08:34:43,387 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.openbittorrent.com:80): 
-2026-03-31 08:34:43,396 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.opentrackr.org:1337): 
-2026-03-31 08:34:44,396 [WARNING] pytorrent.core.nat_traversal: NAT: UPnP và PCP đều thất bại. Kết nối vào chỉ hoạt động nếu đã forward port thủ công.
-2026-03-31 08:34:44,397 [WARNING] pytorrent.torrent: NAT traversal failed — client sẽ không nhận được kết nối vào nếu port 6881 chưa được forward trên router.
-2026-03-31 08:34:45,015 [ERROR] pytorrent.core.trackers: Error fetching peers from HTTPTracker(tracker.opentrackr.org:1337): Error Code: 400 - Invalid Request
-2026-03-31 08:35:12,286 [WARNING] pytorrent.torrent:   No NAT mapping active. Seeder not reachable from outside unless port 6881 is manually forwarded.
+2026-04-07 09:40:49,155 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(tracker.leechers-paradise.org:6969): [Errno -2] Name or service not known
+2026-04-07 09:40:49,158 [ERROR] pytorrent.core.trackers: Failed to get addr info from UDPTracker(opentracker.i2p.rocks:6969): [Errno -2] Name or service not known
+2026-04-07 09:40:49,480 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.openbittorrent.com:80): unknown object type identifier '<'
+2026-04-07 09:40:49,836 [ERROR] pytorrent.core.trackers: Error occured while connecting to HTTPTracker(tracker.ipv6tracker.org:None): 'peers'
+2026-04-07 09:40:51,603 [ERROR] pytorrent.core.trackers: Error fetching peers from HTTPTracker(tracker.renfei.net:8080): Error Code: 400 - Bad Request
+2026-04-07 09:40:53,024 [WARNING] pytorrent.core.nat_traversal: NAT: UPnP và PCP đều thất bại. Kết nối vào chỉ hoạt động nếu đã forward port thủ công.
+2026-04-07 09:40:53,024 [WARNING] pytorrent.torrent: NAT traversal failed — client sẽ không nhận được kết nối vào nếu port 6881 chưa được forward trên router.
+2026-04-07 09:41:24,062 [WARNING] pytorrent.piece: Piece #28: Fetching blocks from Peer(('119.224.61.192', 55669)) failed. Error: 'NoneType' object is not iterable
+2026-04-07 09:42:16,440 [WARNING] pytorrent.piece: Piece #50: Fetching blocks from Peer(('68.148.165.227', 61893)) failed. Error: 'NoneType' object is not iterable
+2026-04-07 09:42:23,875 [WARNING] pytorrent.torrent: Torrent: Pruned 3 peers.
+2026-04-07 09:48:43,132 [WARNING] pytorrent.piece: Piece #363: SHA-1 validation failed. Dropping.
+2026-04-07 09:48:51,582 [WARNING] pytorrent.piece: Piece #372: SHA-1 validation failed. Dropping.
+2026-04-07 09:48:51,582 [WARNING] pytorrent.downloader: Downloader: Peer(('185.149.91.147', 51016)) caused 2 hash failures — penalizing
+2026-04-07 09:48:51,618 [WARNING] pytorrent.torrent: Torrent: Pruned 33 peers.
+2026-04-07 09:48:58,770 [WARNING] pytorrent.piece: Piece #386: SHA-1 validation failed. Dropping.
+2026-04-07 09:48:58,770 [WARNING] pytorrent.downloader: Downloader: Peer(('185.149.91.147', 51016)) caused 3 hash failures — penalizing
+2026-04-07 09:49:07,461 [WARNING] pytorrent.piece: Piece #386: SHA-1 validation failed. Dropping.
+2026-04-07 09:49:07,461 [WARNING] pytorrent.downloader: Downloader: Peer(('185.149.91.147', 51016)) caused 4 hash failures — penalizing
+2026-04-07 09:49:20,136 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2376638754 — stream desynced, dropping buffer
+2026-04-07 09:49:20,813 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2131400762 — stream desynced, dropping buffer
+2026-04-07 09:49:20,937 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=298596638 — stream desynced, dropping buffer
+2026-04-07 09:49:20,937 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3354417280 — stream desynced, dropping buffer
+2026-04-07 09:49:22,745 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1480174086 — stream desynced, dropping buffer
+2026-04-07 09:49:22,746 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=217557022 — stream desynced, dropping buffer
+2026-04-07 09:49:22,746 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=581241197 — stream desynced, dropping buffer
+2026-04-07 09:49:22,746 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1650472660 — stream desynced, dropping buffer
+2026-04-07 09:49:24,160 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3598963874 — stream desynced, dropping buffer
+2026-04-07 09:49:24,160 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1876091923 — stream desynced, dropping buffer
+2026-04-07 09:49:24,161 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=4219819349 — stream desynced, dropping buffer
+2026-04-07 09:49:24,161 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1688925419 — stream desynced, dropping buffer
+2026-04-07 09:49:25,657 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=529261012 — stream desynced, dropping buffer
+2026-04-07 09:49:25,663 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2923090267 — stream desynced, dropping buffer
+2026-04-07 09:49:25,663 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=4070524967 — stream desynced, dropping buffer
+2026-04-07 09:49:27,216 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=792145146 — stream desynced, dropping buffer
+2026-04-07 09:49:27,216 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3079441353 — stream desynced, dropping buffer
+2026-04-07 09:49:27,379 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=238962526 — stream desynced, dropping buffer
+2026-04-07 09:49:29,486 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1300405542 — stream desynced, dropping buffer
+2026-04-07 09:49:29,486 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=963184256 — stream desynced, dropping buffer
+2026-04-07 09:49:29,657 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2677154189 — stream desynced, dropping buffer
+2026-04-07 09:49:29,658 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3902668153 — stream desynced, dropping buffer
+2026-04-07 09:49:29,658 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2778364600 — stream desynced, dropping buffer
+2026-04-07 09:49:29,658 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1036072920 — stream desynced, dropping buffer
+2026-04-07 09:49:29,658 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1602218301 — stream desynced, dropping buffer
+2026-04-07 09:49:30,315 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3334144913 — stream desynced, dropping buffer
+2026-04-07 09:49:30,315 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2816882417 — stream desynced, dropping buffer
+2026-04-07 09:49:30,315 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3584609058 — stream desynced, dropping buffer
+2026-04-07 09:49:30,315 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=220827110 — stream desynced, dropping buffer
+2026-04-07 09:49:30,783 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2275027211 — stream desynced, dropping buffer
+2026-04-07 09:50:20,355 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2196183538 — stream desynced, dropping buffer
+2026-04-07 09:50:20,929 [WARNING] pytorrent.torrent: Torrent: Pruned 1 peers.
+2026-04-07 09:50:21,514 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=753420250 — stream desynced, dropping buffer
+2026-04-07 09:50:24,030 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1768127119 — stream desynced, dropping buffer
+2026-04-07 09:50:24,030 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=786046026 — stream desynced, dropping buffer
+2026-04-07 09:50:24,031 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=993314245 — stream desynced, dropping buffer
+2026-04-07 09:50:24,119 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=4147303457 — stream desynced, dropping buffer
+2026-04-07 09:50:24,120 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=114733031 — stream desynced, dropping buffer
+2026-04-07 09:50:26,519 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=345550281 — stream desynced, dropping buffer
+2026-04-07 09:50:26,940 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3131364395 — stream desynced, dropping buffer
+2026-04-07 09:50:26,940 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2027203680 — stream desynced, dropping buffer
+2026-04-07 09:50:26,940 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3941932124 — stream desynced, dropping buffer
+2026-04-07 09:50:26,941 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2742033557 — stream desynced, dropping buffer
+2026-04-07 09:50:26,942 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3419750456 — stream desynced, dropping buffer
+2026-04-07 09:50:28,900 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1475265127 — stream desynced, dropping buffer
+2026-04-07 09:50:28,900 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=184782909 — stream desynced, dropping buffer
+2026-04-07 09:50:28,901 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3224715703 — stream desynced, dropping buffer
+2026-04-07 09:50:28,901 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3057644449 — stream desynced, dropping buffer
+2026-04-07 09:50:28,901 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=611975048 — stream desynced, dropping buffer
+2026-04-07 09:50:28,901 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3667461636 — stream desynced, dropping buffer
+2026-04-07 09:50:28,901 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2631788101 — stream desynced, dropping buffer
+2026-04-07 09:50:28,901 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1174302327 — stream desynced, dropping buffer
+2026-04-07 09:50:28,901 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=354012318 — stream desynced, dropping buffer
+2026-04-07 09:50:28,901 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3794718144 — stream desynced, dropping buffer
+2026-04-07 09:50:28,901 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2443424973 — stream desynced, dropping buffer
+2026-04-07 09:50:51,300 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1111970872 — stream desynced, dropping buffer
+2026-04-07 09:50:51,301 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=466202802 — stream desynced, dropping buffer
+2026-04-07 09:50:51,301 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3366689772 — stream desynced, dropping buffer
+2026-04-07 09:50:51,301 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1675959320 — stream desynced, dropping buffer
+2026-04-07 09:50:51,301 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3561486196 — stream desynced, dropping buffer
+2026-04-07 09:50:51,301 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=3120680462 — stream desynced, dropping buffer
+2026-04-07 09:50:51,301 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=2207965384 — stream desynced, dropping buffer
+2026-04-07 09:50:51,301 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=1249014419 — stream desynced, dropping buffer
+2026-04-07 09:50:51,301 [WARNING] pytorrent.core.pwp_response_parse: PeerResponseParser: implausibly large message_len=474836890 — stream desynced, dropping buffer
