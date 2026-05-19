@@ -16,7 +16,7 @@
 │  torrent_loop  (background asyncio event loop — daemon thread)  │
 │    │                                                            │
 │    ├── Torrent.init()                                           │
-│    │     ├── _bind_tcp_server()   ← mở port TCP 6881-6889       │
+│    │     ├── _bind_tcp_server()   ← mở port TCP 6882-6899       │
 │    │     ├── _setup_nat()         ← UPnP / PCP                  │
 │    │     └── _contact_trackers()  ← lấy danh sách peer         │
 │    │                                                            │
@@ -72,7 +72,7 @@ torrent_file (.torrent)
     → bencode_wrapper.bdecode()
     → tách: info_hash, piece_hashes, tracker list, file list
 
-_bind_tcp_server()              → tìm port trống 6881–6889
+_bind_tcp_server()              → tìm port trống 6882–6899
 _setup_nat() ‖ _contact_trackers()   ← chạy song song (asyncio.gather)
 
 _setup_nat():
@@ -186,11 +186,11 @@ seeding không hiệu quả.
 ```
 Internet
    │
-[Router/NAT]  ← cần thêm rule: "port 6881 TCP → 192.168.1.x:6881"
+[Router/NAT]  ← cần thêm rule: "port 6882 TCP → 192.168.1.x:6882"
    │
 [LAN: 192.168.1.x]
    │
-[pytorrent: bind 0.0.0.0:6881]
+[pytorrent: bind 0.0.0.0:6882]
 ```
 
 **Chiến lược (theo thứ tự ưu tiên):**

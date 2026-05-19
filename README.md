@@ -61,7 +61,7 @@ pip install -r requirements.txt
 python web/app.py
 ```
 
-Ứng dụng sẽ khởi động tại: **http://127.0.0.1:5000**
+Ứng dụng sẽ khởi động tại: **http://127.0.0.1:5001**
 
 > 📁 Các file tải về sẽ được lưu trong thư mục `downloads/`
 

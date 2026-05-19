@@ -17,3 +17,8 @@ fix.txt
 ARCHITECTURE.md
 pytorrent.log
 fix.txt
+_show_lines.py
+test_bind.py
+test_port.py 
+test_ports_full.py
+SOCKET_FIX.md

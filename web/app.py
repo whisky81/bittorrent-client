@@ -544,11 +544,6 @@ def delete_torrent(info_hash):
     completed_hashes.discard(info_hash)
     return jsonify({"success": True})
 
-
-if __name__ == "__main__":
-    print("Running on http://127.0.0.1:5000")
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
-
 # ── Port reachability check ────────────────────────────────────────────────────
 @app.route("/api/nat-status", methods=["GET"])
 def get_nat_status():
@@ -592,3 +587,20 @@ def get_nat_status():
         }
 
     return jsonify(statuses)
+
+
+import socket 
+def find_free_port(start=5001, end=5009):
+    for port in range(start, end + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(("0.0.0.0", port))
+                return port
+            except OSError:
+                continue
+    raise RuntimeError("No free ports available")
+
+if __name__ == "__main__":
+    port = find_free_port()
+    print(f"Running on http://127.0.0.1:{port}")
+    app.run(host="0.0.0.0", port=port, debug=True, use_reloader=False)
