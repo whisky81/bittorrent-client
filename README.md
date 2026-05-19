@@ -20,7 +20,7 @@
 
 ### Yêu cầu
 
-- Python 3.8 trở lên
+- Python 3.13+
 
 ### Các bước cài đặt
 
@@ -40,7 +40,7 @@ python -m venv .venv
 | Hệ điều hành | Lệnh kích hoạt |
 |---|---|
 | Linux / macOS | `source ./.venv/bin/activate` |
-| Windows | `.venv\Scripts\activate.bat` |
+| Windows | `.venv\Scripts\activate.ps1` |
 
 **3. Cài đặt các thư viện phụ thuộc**
 
