@@ -9,8 +9,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
-  "dependencies": {
-    "bencode": "^4.0.0"
-  }
+  "type": "module"
 }
