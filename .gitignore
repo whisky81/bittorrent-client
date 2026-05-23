@@ -1,24 +1,4 @@
-.venv
-pytorrent/__pycache__
-pytorrent/core/__pycache__
-__pycache__
-
-imgs+note
-output.txt
-notes.txt
-
-Blockchain - An Illustrated Guidebook To Understand Blockchain
-data
-downloads
-.pytest_cache
-tests
-implementation_plan.md
-fix.txt
+docs
 ARCHITECTURE.md
-pytorrent.log
-fix.txt
-_show_lines.py
-test_bind.py
-test_port.py 
-test_ports_full.py
-SOCKET_FIX.md
+BAO_CAO.pdf
+README.md

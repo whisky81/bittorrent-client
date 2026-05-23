@@ -1,5 +1,0 @@
-1: hãy cập nhật trạng thái port có forwarding lên ui? và kiểm tra xem ở phần logic nó đúng chưa
-2: tôi đã phát hiện 1 lỗi khi end_byte của 1 file ở giữa 1 piece thì start_byte của file thứ 2 sẽ được ghi vòa file tiếp theo nhưng từ lúc đó trở đi thì các piece nhận được luôn ở trạng thái mismatch dẫn đến stalled vĩnh viễn  từ đó tôi nghĩ có 1 con trỏ (offset) nào đó chưa được di chuyển đến đầu piece tiếp theo làm cho hàm check hash bị sai liên tục 
-3: hiện tại thì số byte uploaded vẫn bằng 0 hãy cho ngừoi dùng trên ui biết liệu porrt đó có mở trên router chưa thông qua pcp 
-    client là p2p app nên mở pcp theo peer message đúng không?
-4: hãy đảm bảo import export và sử dụng đúng 
