@@ -2,6 +2,7 @@ import dgram from 'dgram'
 import { CONNECTION_ID, ACTIONS, EVENTS, REQUEST_TIMEOUT,
          toUInt32, toUInt16, toUInt64,
          randomBytes4, parseCompact } from './common.js'
+import TrackerError from "./TrackerError.js"
 
 export function announce (client, url, opts) {
   // Bug 1 fix: URL.port is always a string — must convert to Number
@@ -9,7 +10,7 @@ export function announce (client, url, opts) {
   const hostname = parsed.hostname
   const port     = Number(parsed.port)
 
-  if (!port) return client.emit('warning', new Error(`missing port in tracker URL: ${url}`))
+  if (!port) return client.emit('warning', new TrackerError('missing a port in tracker url', opts.event, 'udp', url, 'MISSING_PORT'))
 
   let socket
   let timer
@@ -27,7 +28,7 @@ export function announce (client, url, opts) {
 
   function onError (err) {
     cleanup()
-    client.emit('warning', new Error(`${err.message} (${url})`))
+    client.emit('warning', err)
   }
 
   function onMessage (msg) {
@@ -37,7 +38,7 @@ export function announce (client, url, opts) {
 
     switch (action) {
       case ACTIONS.CONNECT: {
-        if (msg.length < 16) return onError(new Error('invalid connect response'))
+        if (msg.length < 16) return onError(new TrackerError('invalid connect response', opts.event, 'udp', url, 'RESPONSE_ERROR'))
         const connectionId = msg.slice(8, 16)
         transactionId = randomBytes4()
         sendAnnounce(connectionId)
@@ -46,8 +47,9 @@ export function announce (client, url, opts) {
 
       case ACTIONS.ANNOUNCE: {
         cleanup()
-        if (msg.length < 20) return client.emit('warning', new Error('invalid announce response'))
+        if (msg.length < 20) return client.emit('warning', new TrackerError('invalid announce response', opts.event, 'udp', url, 'RESPONSE_ERROR'))
         client.emit('udp:response', {
+          event: opts.event,
           url,
           peers:      parseCompact(msg.slice(20)),
           intervalMs: msg.readUInt32BE(8) * 1000,
@@ -60,7 +62,7 @@ export function announce (client, url, opts) {
 
       case ACTIONS.ERROR: {
         cleanup()
-        client.emit('warning', new Error(msg.slice(8).toString()))
+        client.emit('warning', new TrackerError(msg.slice(8).toString(), opts.event, 'udp', url, 'UNKNOWN_ERROR'))
         break
       }
     }
@@ -69,7 +71,7 @@ export function announce (client, url, opts) {
   function send (msg) {
     if (!socket) return
     socket.send(msg, 0, msg.length, port, hostname, (err) => {
-      if (err) onError(err)
+      if (err) onError(new TrackerError(err.message, opts.event, 'udp', url, 'SEND_ERROR'))
     })
   }
 
@@ -100,7 +102,7 @@ export function announce (client, url, opts) {
   socket.on('message', onMessage)
   socket.on('error', onError)
   socket.bind(() => {
-    timer = setTimeout(() => onError(new Error('timeout')), REQUEST_TIMEOUT)
+    timer = setTimeout(() => onError(new TrackerError('timeout', opts.event, 'udp', url, 'TIMEOUT')), REQUEST_TIMEOUT)
     if (timer.unref) timer.unref()
     sendConnect()
   })

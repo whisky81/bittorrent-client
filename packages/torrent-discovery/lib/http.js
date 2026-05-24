@@ -2,6 +2,7 @@ import http from 'http'
 import https from 'https'
 import bencode from 'bencode'
 import { REQUEST_TIMEOUT, MAX_RESPONSE_SIZE, encodeBin, parseCompact } from './common.js'
+import TrackerError from './TrackerError.js';
 
 export function announce(client, url, opts) {
   const u = new URL(url)
@@ -21,7 +22,7 @@ export function announce(client, url, opts) {
   const req = transport.get(fullUrl, (res) => {
     if (res.statusCode !== 200) {
       res.resume()
-      return client.emit('warning', new Error(`HTTP ${res.statusCode} (${url})`))
+      return client.emit('warning', new TrackerError(`status code: ${res.statusCode}`, opts.event, 'http', url, 'RESPONSE_ERROR'));
     }
 
     const chunks = []
@@ -30,7 +31,7 @@ export function announce(client, url, opts) {
     res.on('data', c => {
       totalBytes += c.length
       if (totalBytes > MAX_RESPONSE_SIZE) {
-        req.destroy(new Error('response too large'))
+        req.destroy(new TrackerError('response too large', opts.event, 'http', 'BIG_RESPONSE'));
         return
       }
       chunks.push(c)
@@ -41,12 +42,13 @@ export function announce(client, url, opts) {
         const decoded = bencode.decode(Buffer.concat(chunks))
 
         if (decoded['failure reason']) {
-          return client.emit('warning', new Error(Buffer.from(decoded['failure reason']).toString()))
+          return client.emit('warning', new TrackerError(Buffer.from(decoded['failure reason']).toString(), opts.event, 'http', url, 'HTTP_TRACKER_FAILURE_REASON'))
         }
 
         const rawPeers = decoded.peers
         if (rawPeers && ArrayBuffer.isView(rawPeers)) {
           client.emit('http:response', {
+            event: opts.event,
             url,
             peers: parseCompact(Buffer.from(rawPeers)),
             // Bug 3 fix: decoded.interval có thể undefined → NaN
@@ -57,13 +59,13 @@ export function announce(client, url, opts) {
         }
 
       } catch (err) {
-        client.emit('warning', new Error(`${err.message} (${url})`))
+        client.emit('warning', new TrackerError(err.message, opts.event, 'http', url, 'UNKNOWN_ERROR'))
       }
     })
 
-    res.on('error', err => client.emit('warning', new Error(`${err.message} (${url})`)))
+    res.on('error', err => client.emit('warning', new TrackerError(err.message, opts.event, 'http', url, 'RESPONSE_ERROR')))
   })
 
-  req.setTimeout(REQUEST_TIMEOUT, () => req.destroy(new Error(`timeout (${url})`)))
-  req.on('error', err => client.emit('warning', new Error(`${err.message} (${url})`)))
+  req.setTimeout(REQUEST_TIMEOUT, () => req.destroy(new TrackerError('timeout', opts.event, 'http', url, 'TIMEOUT')))
+  req.on('error', err => client.emit('warning', err))
 }
