@@ -24,7 +24,8 @@
   "homepage": "https://github.com/whisky81/bittorrent-client#readme",
   "workspaces": [
     "packages/parse-torrent",
-    "packages/torrent-discovery"
+    "packages/torrent-discovery",
+    "packages/pwp"
   ],
   "dependencies": {
     "bencode": "^4.0.0",
