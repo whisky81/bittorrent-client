@@ -27,6 +27,7 @@
     "packages/torrent-discovery"
   ],
   "dependencies": {
-    "bencode": "^4.0.0"
+    "bencode": "^4.0.0",
+    "bittorrent-protocol": "^5.0.0"
   }
 }
