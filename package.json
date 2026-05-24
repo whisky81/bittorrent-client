@@ -1,20 +1,17 @@
 {
   "name": "node-torrent",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
+  "description": "A tiny BitTorrent client with Electron UI, supporting rarest-first and sequential download modes",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node index.js"
+    "dev": "NODE_ENV=development electron .",
+    "start": "electron ."
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/whisky81/bittorrent-client.git"
   },
-  "keywords": [],
+  "keywords": ["bittorrent", "torrent", "electron", "streaming"],
   "author": "",
   "license": "ISC",
   "type": "module",
@@ -29,5 +26,8 @@
   "dependencies": {
     "bencode": "^4.0.0",
     "bittorrent-protocol": "^5.0.0"
+  },
+  "devDependencies": {
+    "electron": "^36.2.0"
   }
 }

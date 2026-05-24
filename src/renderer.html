@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiny BitTorrent Client</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #eee;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #00d4ff;
+      font-size: 2.5rem;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .card h2 {
+      color: #00d4ff;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+    
+    input[type="file"],
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 1rem;
+    }
+    
+    input[type="file"]::file-selector-button {
+      background: #00d4ff;
+      color: #1a1a2e;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 1rem;
+    }
+    
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+      color: #1a1a2e;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+    }
+    
+    .progress-container {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+    
+    .progress-bar {
+      height: 24px;
+      background: linear-gradient(90deg, #00d4ff 0%, #00ff88 100%);
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1a1a2e;
+      font-weight: bold;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .stat-item {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      border-radius: 6px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #00d4ff;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 0.25rem;
+    }
+    
+    .stream-url {
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      word-break: break-all;
+    }
+    
+    .stream-url code {
+      color: #00ff88;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .file-list {
+      list-style: none;
+      margin-top: 1rem;
+    }
+    
+    .file-list li {
+      padding: 0.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .file-name {
+      color: #fff;
+    }
+    
+    .file-size {
+      color: #888;
+      font-size: 0.85rem;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    
+    .status-idle {
+      background: rgba(255, 255, 255, 0.1);
+      color: #aaa;
+    }
+    
+    .status-downloading {
+      background: rgba(0, 212, 255, 0.2);
+      color: #00d4ff;
+    }
+    
+    .status-complete {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00ff88;
+    }
+    
+    .log {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+    }
+    
+    .log-entry {
+      margin-bottom: 0.25rem;
+      color: #888;
+    }
+    
+    .log-entry.info {
+      color: #00d4ff;
+    }
+    
+    .log-entry.success {
+      color: #00ff88;
+    }
+    
+    .log-entry.error {
+      color: #ff4444;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌊 Tiny BitTorrent Client</h1>
+    
+    <!-- Load Torrent Section -->
+    <div class="card">
+      <h2>📥 Load Torrent</h2>
+      <div class="form-group">
+        <label for="torrentFile">Select .torrent file</label>
+        <input type="file" id="torrentFile" accept=".torrent">
+      </div>
+      <div class="form-group">
+        <label for="downloadMode">Download Mode</label>
+        <select id="downloadMode">
+          <option value="rarest">Rarest First (Recommended)</option>
+          <option value="sequential">Sequential (For Streaming)</option>
+        </select>
+      </div>
+      <button id="loadBtn">Load Torrent</button>
+    </div>
+    
+    <!-- Torrent Info Section -->
+    <div class="card hidden" id="torrentInfo">
+      <h2>📋 Torrent Information</h2>
+      <div id="torrentDetails"></div>
+      <ul class="file-list" id="fileList"></ul>
+    </div>
+    
+    <!-- Download Progress Section -->
+    <div class="card hidden" id="downloadSection">
+      <h2>⬇️ Download Progress</h2>
+      <span class="status-badge status-idle" id="statusBadge">Idle</span>
+      
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+      </div>
+      
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-value" id="piecesDownloaded">0/0</div>
+          <div class="stat-label">Pieces</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="peersCount">0</div>
+          <div class="stat-label">Peers</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="downloadSpeed">0 KB/s</div>
+          <div class="stat-label">Speed</div>
+        </div>
+      </div>
+      
+      <div class="actions">
+        <button id="stopBtn" class="btn-secondary">Stop Download</button>
+      </div>
+    </div>
+    
+    <!-- Streaming Section -->
+    <div class="card hidden" id="streamSection">
+      <h2>🎬 VLC Streaming</h2>
+      <p style="color: #888; margin-bottom: 1rem;">
+        Open VLC Media Player → Media → Open Network Stream → Paste the URL below
+      </p>
+      <div class="stream-url">
+        <code id="streamUrl">Loading...</code>
+      </div>
+      <div class="actions">
+        <button id="copyUrlBtn" class="btn-secondary">Copy URL</button>
+      </div>
+    </div>
+    
+    <!-- Log Section -->
+    <div class="card">
+      <h2>📝 Activity Log</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id)
+    
+    // State
+    let client = null
+    let torrentBuffer = null
+    
+    // Event Listeners
+    $('torrentFile').addEventListener('change', handleFileSelect)
+    $('loadBtn').addEventListener('click', loadTorrent)
+    $('stopBtn').addEventListener('click', stopDownload)
+    $('copyUrlBtn').addEventListener('click', copyStreamUrl)
+    
+    function log(message, type = 'info') {
+      const logEl = $('log')
+      const entry = document.createElement('div')
+      entry.className = `log-entry ${type}`
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`
+      logEl.appendChild(entry)
+      logEl.scrollTop = logEl.scrollHeight
+    }
+    
+    function handleFileSelect(event) {
+      const file = event.target.files[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          torrentBuffer = e.target.result
+          log(`Selected: ${file.name}`, 'info')
+        }
+        reader.readAsArrayBuffer(file)
+      }
+    }
+    
+    async function loadTorrent() {
+      if (!torrentBuffer) {
+        log('Please select a .torrent file first', 'error')
+        return
+      }
+      
+      const mode = $('downloadMode').value
+      log(`Loading torrent in ${mode} mode...`, 'info')
+      
+      try {
+        // In Electron, we'll use IPC to communicate with main process
+        const { ipcRenderer } = require('electron')
+        
+        ipcRenderer.send('load-torrent', {
+          buffer: Buffer.from(torrentBuffer),
+          strategy: mode
+        })
+        
+        $('loadBtn').disabled = true
+        log('Torrent loading initiated...', 'info')
+        
+      } catch (err) {
+        log(`Error: ${err.message}`, 'error')
+      }
+    }
+    
+    function stopDownload() {
+      if (client) {
+        client.stop()
+        log('Download stopped', 'info')
+      }
+    }
+    
+    function copyStreamUrl() {
+      const url = $('streamUrl').textContent
+      navigator.clipboard.writeText(url).then(() => {
+        log('URL copied to clipboard', 'success')
+      })
+    }
+    
+    function updateProgress(progress) {
+      const progressBar = $('progressBar')
+      const percentage = parseFloat(progress.percentage)
+      
+      progressBar.style.width = `${percentage}%`
+      progressBar.textContent = `${percentage}%`
+      
+      $('piecesDownloaded').textContent = `${progress.downloadedPieces}/${progress.totalPieces}`
+      $('peersCount').textContent = progress.peers
+    }
+    
+    function updateStatus(status) {
+      const badge = $('statusBadge')
+      badge.className = `status-badge status-${status}`
+      badge.textContent = status.charAt(0).toUpperCase() + status.slice(1)
+    }
+    
+    // Listen for events from main process
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof require !== 'undefined') {
+        try {
+          const { ipcRenderer } = require('electron')
+          
+          ipcRenderer.on('torrent-ready', (event, data) => {
+            log(`Torrent loaded: ${data.name}`, 'success')
+            $('torrentInfo').classList.remove('hidden')
+            
+            // Display torrent details
+            $('torrentDetails').innerHTML = `
+              <p><strong>Name:</strong> ${data.name}</p>
+              <p><strong>Size:</strong> ${(data.totalLength / 1024 / 1024).toFixed(2)} MB</p>
+              <p><strong>Files:</strong> ${data.files.length}</p>
+            `
+            
+            // Display file list
+            const fileList = $('fileList')
+            fileList.innerHTML = data.files.map(f => `
+              <li>
+                <span class="file-name">${f.path}</span>
+                <span class="file-size">${(f.length / 1024 / 1024).toFixed(2)} MB</span>
+              </li>
+            `).join('')
+            
+            $('downloadSection').classList.remove('hidden')
+            updateStatus('downloading')
+          })
+          
+          ipcRenderer.on('piece-downloaded', (event, pieceIndex) => {
+            log(`Piece ${pieceIndex} downloaded`, 'info')
+          })
+          
+          ipcRenderer.on('progress-update', (event, progress) => {
+            updateProgress(progress)
+          })
+          
+          ipcRenderer.on('stream-ready', (event, url) => {
+            log(`Streaming URL ready: ${url}`, 'success')
+            $('streamSection').classList.remove('hidden')
+            $('streamUrl').textContent = url
+          })
+          
+          ipcRenderer.on('download-complete', () => {
+            log('Download complete!', 'success')
+            updateStatus('complete')
+          })
+          
+          ipcRenderer.on('peer-connected', (event, peerAddr) => {
+            log(`Connected to peer: ${peerAddr}`, 'info')
+          })
+          
+          ipcRenderer.on('warning', (event, message) => {
+            log(`Warning: ${message}`, 'error')
+          })
+          
+        } catch (err) {
+          log('Running in browser mode (Electron not available)', 'info')
+        }
+      }
+    })
+  </script>
+</body>
+</html>
