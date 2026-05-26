@@ -4,29 +4,35 @@ import Client from "torrent-discovery";
 import fs from "fs";
 import crypto from "crypto";
 
-const parsed = parse(fs.readFileSync('D:\\Downloads\\2894B6B38DB5249A2C848EFCB8C62D17BB627501.torrent'))
+const tmp = 'D:\\code\\bc\\torrent_files\\abc.torrent'
+const tmp1 = 'D:\\Downloads\\2894B6B38DB5249A2C848EFCB8C62D17BB627501.torrent'
+const parsed = parse(fs.readFileSync(tmp))
 
 // console.log(parsed)
 
-const client = new Client({
-    infoHash: parsed.infoHashBuffer,
-    peerId: crypto.randomBytes(20),
-    announce: parsed.announce,
-    port: 6881
-})
+import MultiFileStore from './lib/multi-file-store.js'
 
-client.on('warning', (err) => {
-    console.log(`[WARNING TORRENT DISCOVERY] EVENT=${err.event} URL=${err.url} MESSAGE=${err.message}`)
-})
+const t = new MultiFileStore(parsed.pieceLength, parsed.files)
 
-client.on('http:response', (response) => {
-    console.log("HTTP RESPONSE")
-    console.log(JSON.stringify(response, null, 2))
-})
+// const client = new Client({
+//     infoHash: parsed.infoHashBuffer,
+//     peerId: crypto.randomBytes(20),
+//     announce: parsed.announce,
+//     port: 6881
+// })
 
-client.on('udp:response', (response) => {
-    console.log("UDP RESPONSE")
-    console.log(JSON.stringify(response, null, 2))
-})
+// client.on('warning', (err) => {
+//     console.log(`[WARNING TORRENT DISCOVERY] EVENT=${err.event} URL=${err.url} MESSAGE=${err.message}`)
+// })
 
-client.start()
+// client.on('http:response', (response) => {
+//     console.log("HTTP RESPONSE")
+//     console.log(JSON.stringify(response, null, 2))
+// })
+
+// client.on('udp:response', (response) => {
+//     console.log("UDP RESPONSE")
+//     console.log(JSON.stringify(response, null, 2))
+// })
+
+// client.start()
