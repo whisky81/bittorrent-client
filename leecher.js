@@ -19,8 +19,11 @@ const id1 = swarmManager.add({
 
 swarmManager.connect(id1, '127.0.0.1', 6881)
 
+
 process.on('SIGINT', async () => {
     console.log('[graceful shutdown]')
+    const stats = swarmManager.getAllStats()
+    console.log(JSON.stringify(stats, null, 2))
     swarmManager.shutdown()
     process.exit(0)
 })
