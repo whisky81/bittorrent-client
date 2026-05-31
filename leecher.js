@@ -1,54 +1,27 @@
 
 import parse from "parse-torrent";
 import fs from "fs";
-import Client from 'torrent-discovery';
 import SwarmManager from './lib/torrent-manager.js'
 import net from 'net'
-const TORRENT_FILE_PATH = 'C:\\Users\\whisky\\OneDrive - ptit.edu.vn\\Desktop\\C3839BDEA4156F0978032F56F848C4FDAF106DFD.torrent'
+
+const TORRENT_FILE_PATH = 'D:\\Downloads\\E2ED88DE112FCB9246335CFA8CE81E8D369C5479.torrent'
+const SAVE_DIR = "D:\\torrent_dow\\"
 const PEER_RETRY_TIME = 2_000
 
-const swarmManager = new SwarmManager({
-    listenPort: 6882
-})
+// The OS chooses a free port for incoming connections
+const swarmManager = new SwarmManager()
 
 const parsed1 = parse(fs.readFileSync(TORRENT_FILE_PATH)) 
-const id1 = swarmManager.add({
+// download always is leeching
+const id1 = await swarmManager.add({
     parsed: parsed1,
-    outputPath: "D:\\" + parsed1.files[0].name,
+    outputPath: SAVE_DIR + parsed1.name,
     mode: 'leeching',
     stratery: "rarest-first"
 })
 
-const myPeerId = swarmManager.sessions.get(id1).myPeerId
-const client = new Client({
-    infoHash: parsed1.infoHash,
-    peerId: myPeerId,
-    announce: parsed1.announce,
-    port: 6882
-})
-
-client.on('warning', (err) => {
-    console.log(`[WARNING TORRENT DISCOVERY] EVENT=${err.event} URL=${err.url} MESSAGE=${err.message}`)
-})
-
-client.on('http:response', (response) => {
-    for (const peer of response.peers) {
-        let [ip, port] = peer.split(":");
-        swarmManager.connect(id1, ip, parseInt(port))
-    }
-})
-
-client.on('udp:response', (response) => {
-    for (const peer of response.peers) {
-        let [ip, port] = peer.split(":");
-        swarmManager.connect(id1, ip, parseInt(port))
-    }
-})
-
-
 swarmManager.onSession(id1, 'done', () => {
     console.log('---Downloaded successfully---')
-    client.complete()
 })
 
 swarmManager.onSession(id1, 'piece', (pieceIndex, remainingPieces) => {
@@ -74,8 +47,6 @@ swarmManager.onSession(id1, 'peer:drop', (ip, port, peerId) => {
 swarmManager.onSession(id1, 'progress', (stats) => {
     console.log(`progress ${stats.progress}% downloaded=${stats.downloadedMB}MB uploaded=${stats.uploadedMB} peer=${stats.noOfCPeer}`)
 })
-
-client.start()
 
 process.on('SIGINT', async () => {
     console.log('[graceful shutdown]')
