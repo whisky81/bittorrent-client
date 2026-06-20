@@ -1,6 +1,6 @@
-import bencode from 'bencode'
-import crypto from 'crypto'
-import path from 'path'
+import bencode from 'bencode';
+import crypto from 'crypto';
+import path from 'path';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -9,7 +9,7 @@ import path from 'path'
  * @param {Buffer|Uint8Array} buf
  * @returns {string}
  */
-const bufToString = (buf) => Buffer.from(buf).toString('utf-8')
+const bufToString = (buf) => Buffer.from(buf).toString('utf-8');
 
 /**
  * Assert a required field exists in the torrent dict.
@@ -18,7 +18,7 @@ const bufToString = (buf) => Buffer.from(buf).toString('utf-8')
  * @param {string} fieldName - Human-readable field path (e.g. 'info.name')
  */
 function ensure(value, fieldName) {
-    if (!value) throw new Error(`Torrent is missing required field: ${fieldName}`)
+  if (!value) throw new Error(`Torrent is missing required field: ${fieldName}`);
 }
 
 /**
@@ -29,11 +29,11 @@ function ensure(value, fieldName) {
  * @returns {string[]} Array of 40-char hex strings, one per piece
  */
 function splitPieces(buf) {
-    const pieces = []
-    for (let i = 0; i < buf.length; i += 20) {
-        pieces.push(Buffer.from(buf.slice(i, i + 20)).toString('hex'))
-    }
-    return pieces
+  const pieces = [];
+  for (let i = 0; i < buf.length; i += 20) {
+    pieces.push(Buffer.from(buf.slice(i, i + 20)).toString('hex'));
+  }
+  return pieces;
 }
 
 /**
@@ -48,13 +48,13 @@ function splitPieces(buf) {
  * @returns {string} Relative OS path without leading separator
  */
 function resolveFilePath(torrentName, filePath) {
-    const parts = []
-        .concat(torrentName, filePath || [])
-        .map(p => ArrayBuffer.isView(p) ? bufToString(p) : p)
+  const parts = []
+    .concat(torrentName, filePath || [])
+    .map((p) => (ArrayBuffer.isView(p) ? bufToString(p) : p));
 
-    // path.join needs spread args, not an array.
-    // Prepend sep so join resolves correctly, then strip the leading slash.
-    return path.join.apply(null, [path.sep].concat(parts)).slice(1)
+  // path.join needs spread args, not an array.
+  // Prepend sep so join resolves correctly, then strip the leading slash.
+  return path.join.apply(null, [path.sep].concat(parts)).slice(1);
 }
 
 // ─── Validation ─────────────────────────────────────────────────────────────
@@ -66,24 +66,24 @@ function resolveFilePath(torrentName, filePath) {
  * @param {Object} torrent - Raw object from bencode.decode()
  */
 function validateTorrent(torrent) {
-    ensure(
-        torrent.announce ||
-        (Array.isArray(torrent['announce-list']) && torrent['announce-list'].length > 0),
-        "torrent.announce or torrent['announce-list']"
-    )
-    ensure(torrent.info,                                            'info')
-    ensure(torrent.info['name.utf-8'] || torrent.info.name,         'info.name')
-    ensure(torrent.info['piece length'],                            "info['piece length']")
-    ensure(torrent.info.pieces,                                     'info.pieces')
+  ensure(
+    torrent.announce ||
+      (Array.isArray(torrent['announce-list']) && torrent['announce-list'].length > 0),
+    "torrent.announce or torrent['announce-list']"
+  );
+  ensure(torrent.info, 'info');
+  ensure(torrent.info['name.utf-8'] || torrent.info.name, 'info.name');
+  ensure(torrent.info['piece length'], "info['piece length']");
+  ensure(torrent.info.pieces, 'info.pieces');
 
-    if (torrent.info.files) {
-        torrent.info.files.forEach(file => {
-            ensure(typeof file.length === 'number',           'info.files.$.length')
-            ensure(file['path.utf-8'] || file.path,           'info.files.$.path')
-        })
-    } else {
-        ensure(typeof torrent.info.length === 'number',       'info.length')
-    }
+  if (torrent.info.files) {
+    torrent.info.files.forEach((file) => {
+      ensure(typeof file.length === 'number', 'info.files.$.length');
+      ensure(file['path.utf-8'] || file.path, 'info.files.$.path');
+    });
+  } else {
+    ensure(typeof torrent.info.length === 'number', 'info.length');
+  }
 }
 
 // ─── Field extractors ────────────────────────────────────────────────────────
@@ -96,14 +96,11 @@ function validateTorrent(torrent) {
  * @returns {{ infoHashBuffer: Buffer, infoHash: string }}
  */
 function computeInfoHash(infoBuffer) {
-    const infoHashBuffer = crypto
-        .createHash('sha1')
-        .update(Buffer.from(infoBuffer))
-        .digest()
-    return {
-        infoHashBuffer,
-        infoHash: infoHashBuffer.toString('hex')
-    }
+  const infoHashBuffer = crypto.createHash('sha1').update(Buffer.from(infoBuffer)).digest();
+  return {
+    infoHashBuffer,
+    infoHash: infoHashBuffer.toString('hex'),
+  };
 }
 
 /**
@@ -116,18 +113,16 @@ function computeInfoHash(infoBuffer) {
  * @returns {string[]} Deduplicated list of tracker URLs
  */
 function extractAnnounce(torrent) {
-    const urls = []
+  const urls = [];
 
-    if (Array.isArray(torrent['announce-list']) && torrent['announce-list'].length > 0) {
-        // announce-list is a list of tiers, each tier is a list of URLs
-        torrent['announce-list'].forEach(tier =>
-            tier.forEach(url => urls.push(bufToString(url)))
-        )
-    } else if (torrent.announce) {
-        urls.push(bufToString(torrent.announce))
-    }
+  if (Array.isArray(torrent['announce-list']) && torrent['announce-list'].length > 0) {
+    // announce-list is a list of tiers, each tier is a list of URLs
+    torrent['announce-list'].forEach((tier) => tier.forEach((url) => urls.push(bufToString(url))));
+  } else if (torrent.announce) {
+    urls.push(bufToString(torrent.announce));
+  }
 
-    return Array.from(new Set(urls))
+  return Array.from(new Set(urls));
 }
 
 /**
@@ -148,22 +143,22 @@ function extractAnnounce(torrent) {
  *   offset {number} - Byte offset from start of torrent data
  */
 function extractFiles(torrent, torrentName) {
-    const rawFiles = torrent.info.files || [torrent.info]
-    let offset = 0
+  const rawFiles = torrent.info.files || [torrent.info];
+  let offset = 0;
 
-    const files = rawFiles.map(file => {
-        const filePath = resolveFilePath(torrentName, file['path.utf-8'] || file.path)
-        const entry = {
-            path:   filePath,
-            name:   path.basename(filePath),
-            length: file.length,
-            offset
-        }
-        offset += file.length
-        return entry
-    })
+  const files = rawFiles.map((file) => {
+    const filePath = resolveFilePath(torrentName, file['path.utf-8'] || file.path);
+    const entry = {
+      path: filePath,
+      name: path.basename(filePath),
+      length: file.length,
+      offset,
+    };
+    offset += file.length;
+    return entry;
+  });
 
-    return { files, totalLength: offset }
+  return { files, totalLength: offset };
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
@@ -206,46 +201,46 @@ function extractFiles(torrent, torrentName) {
  * @throws {Error} If any required torrent field is missing
  */
 function parse(data) {
-    if (!ArrayBuffer.isView(data)) {
-        throw new Error('parse: expected a Buffer or Uint8Array')
-    }
+  if (!ArrayBuffer.isView(data)) {
+    throw new Error('parse: expected a Buffer or Uint8Array');
+  }
 
-    const torrent = bencode.decode(data)
-    validateTorrent(torrent)
+  const torrent = bencode.decode(data);
+  validateTorrent(torrent);
 
-    const name       = bufToString(torrent.info['name.utf-8'] || torrent.info.name)
-    const infoBuffer = bencode.encode(torrent.info)
-    const { infoHashBuffer, infoHash } = computeInfoHash(infoBuffer)
-    const announce   = extractAnnounce(torrent)
-    const { files, totalLength } = extractFiles(torrent, name)
-    const pieceLength = torrent.info['piece length']
+  const name = bufToString(torrent.info['name.utf-8'] || torrent.info.name);
+  const infoBuffer = bencode.encode(torrent.info);
+  const { infoHashBuffer, infoHash } = computeInfoHash(infoBuffer);
+  const announce = extractAnnounce(torrent);
+  const { files, totalLength } = extractFiles(torrent, name);
+  const pieceLength = torrent.info['piece length'];
 
-    return {
-        // ── Identity ──────────────────────────────────────────────────────
-        info:           torrent.info,
-        infoBuffer,
-        infoHashBuffer,
-        infoHash,
-        name,
+  return {
+    // ── Identity ──────────────────────────────────────────────────────
+    info: torrent.info,
+    infoBuffer,
+    infoHashBuffer,
+    infoHash,
+    name,
 
-        // ── Sources ───────────────────────────────────────────────────────
-        announce,
-        urlList: (torrent['url-list'] || []).map(url => bufToString(url)),
+    // ── Sources ───────────────────────────────────────────────────────
+    announce,
+    urlList: (torrent['url-list'] || []).map((url) => bufToString(url)),
 
-        // ── Metadata ──────────────────────────────────────────────────────
-        created:   torrent['creation date'] ? new Date(torrent['creation date'] * 1000) : null,
-        createdBy: torrent['created by']    ? bufToString(torrent['created by'])        : null,
-        comment:   ArrayBuffer.isView(torrent.comment) ? bufToString(torrent.comment)   : null,
+    // ── Metadata ──────────────────────────────────────────────────────
+    created: torrent['creation date'] ? new Date(torrent['creation date'] * 1000) : null,
+    createdBy: torrent['created by'] ? bufToString(torrent['created by']) : null,
+    comment: ArrayBuffer.isView(torrent.comment) ? bufToString(torrent.comment) : null,
 
-        // ── Layout ────────────────────────────────────────────────────────
-        length:          totalLength,
-        pieceLength,
-        // Last piece is usually shorter than pieceLength.
-        // If total size is an exact multiple of pieceLength, last piece is full-sized.
-        lastPieceLength: (totalLength % pieceLength) || pieceLength,
-        pieces:          splitPieces(torrent.info.pieces),
-        files,
-    }
+    // ── Layout ────────────────────────────────────────────────────────
+    length: totalLength,
+    pieceLength,
+    // Last piece is usually shorter than pieceLength.
+    // If total size is an exact multiple of pieceLength, last piece is full-sized.
+    lastPieceLength: totalLength % pieceLength || pieceLength,
+    pieces: splitPieces(torrent.info.pieces),
+    files,
+  };
 }
 
-export default parse
+export default parse;
