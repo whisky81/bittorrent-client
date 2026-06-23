@@ -23,7 +23,14 @@ export default [
     },
     rules: {
       'prettier/prettier': 'error',
-      'no-unused-vars': 'warn',
+      'no-unused-vars': [
+        'warn',
+        {
+          varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
       'no-console': 'off',
     },
   },
